@@ -427,7 +427,10 @@ class Decorations {
     open() {
         this.isOpen = true;
         this.updateButtons();
-        this.elements.forEach(element => element.setVisible(true));
+        this.elements.forEach(element => {
+            element.setVisible(true);
+            element.setDepth(1000);
+        });
         this.scene.physics.pause();
     }
 

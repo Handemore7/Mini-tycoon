@@ -11,6 +11,8 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Twitch Integration**: Real-time chat monitoring with anti-spam protection
 - **Profile Setup**: Mandatory player name + optional streamer selection
 - **Auto-Save System**: Enhanced save system with backups and export functionality
+- **Inventory System**: Persistent right-side inventory with C key toggle
+- **Debug Console**: Konami Code (WWSSADAD+Enter) for comprehensive debugging
 
 ## How to Play
 
@@ -66,7 +68,9 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Upgrades system with 10-tier progression
 ✅ Character upgrade mechanics (speed, income, chat bonus)
 ✅ Profile deletion functionality
-⏳ Decoration placement
+✅ Decoration placement system with inventory integration
+✅ Persistent inventory system with C key toggle
+✅ Debug console with Konami Code activation
 ⏳ Arena/fighting system
 
 ## Store System
@@ -96,6 +100,28 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - Visual tier progression display
 - MAX tier indication when fully upgraded
 
+## Inventory System
+
+**Persistent Right-Side Inventory:**
+- **2x6 Grid Layout**: 12 slots for equipment and decorations
+- **C Key Toggle**: Show/hide inventory with C key
+- **Equipment Display**: Swords (⚔️) and shields (🛡️) with tier indicators
+- **Decoration Items**: Tables (🪑), plants (🌱), trophies (🏆)
+- **Health Potions**: Instant use potions (🧪) with click consumption
+- **Placement Mode**: Click decorations to enter placement mode
+- **Visual Feedback**: Item counts and tier levels displayed
+- **Persistent Storage**: Inventory state saved automatically
+
+## Debug Console
+
+**Konami Code Activation (WWSSADAD+Enter):**
+- **Stat Modification**: Buttons for money, health, equipment tiers
+- **Inventory Management**: Add/remove decorations and potions
+- **Upgrade Controls**: Modify all upgrade tiers instantly
+- **Browser Console**: Direct access to gameData object
+- **Visual Interface**: Clean button layout with organized sections
+- **Development Tool**: Hidden from normal gameplay
+
 ## UI Design
 
 **Immersive Character-Based Interface:**
@@ -103,16 +129,18 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Player name** displayed above character
 - **Health bar** under character with color coding (green/yellow/red)
 - **Twitch profile** with streamer info (top-right)
+- **Inventory panel** with C key toggle (right-side)
 - **Minimal HUD** for clean gameplay experience
 - **Dynamic elements** that follow player movement
 
 ## Next Steps
 
-1. Create decoration placement and management system
-2. Develop arena/fighting system with automated combat
-3. Add real Twitch profile picture integration
-4. Add more Twitch integration features (followers, subs, etc.)
-5. Implement visual equipment sprites and animations
+1. Develop arena/fighting system with automated combat
+2. Add real Twitch profile picture integration
+3. Add more Twitch integration features (followers, subs, etc.)
+4. Implement visual equipment sprites and animations
+5. Add more decoration types and furniture options
+6. Create achievement system with unlock rewards
 
 ## Save System
 
@@ -131,6 +159,20 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - Health and stat modifications
 - Periodic auto-save timer
 
+## Controls
+
+**Movement:**
+- **WASD** or **Arrow Keys**: Move character in all directions
+
+**Interface:**
+- **C Key**: Toggle inventory visibility
+- **ESC Key**: Open settings menu
+- **Mouse Click**: Interact with buildings and UI elements
+- **Walk Into Buildings**: Alternative interaction method
+
+**Debug:**
+- **Konami Code** (WWSSADAD+Enter): Open debug console
+
 ## Technical Details
 
 - **Frontend**: Phaser.js 3.70.0 for 2D game engine
@@ -142,3 +184,5 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Save System**: Multi-layered persistence with error handling
 - **Profile Pictures**: Framework ready for Twitch API integration
 - **Sprites**: Generated using [PixelLab.ai](https://www.pixellab.ai/)
+- **Inventory**: Persistent 2x6 grid system with item management
+- **Debug Tools**: Konami Code activation with comprehensive controls

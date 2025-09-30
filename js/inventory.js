@@ -8,133 +8,141 @@ class Inventory {
     }
 
     createInventoryUI() {
-        // Background panel
+        // Create fixed slot grid first to get proper dimensions
+        this.createSlotGrid();
+        
+        // Background panel aligned with slots (centered vertically)
         this.background = this.scene.add.graphics()
             .fillStyle(0x000000, 0.8)
-            .fillRect(700, 50, 90, 500)
+            .fillRect(675, 160, 100, 250)
             .lineStyle(2, 0x333333, 1)
-            .strokeRect(700, 50, 90, 500);
+            .strokeRect(675, 160, 100, 250);
 
         // Title
-        this.title = this.scene.add.text(745, 70, 'INVENTORY', {
-            fontSize: '10px',
+        this.title = this.scene.add.text(725, 175, 'INVENTORY', {
+            fontSize: '12px',
             fill: '#ffffff',
             fontWeight: 'bold'
         }).setOrigin(0.5);
-
-        // Inventory slots container
-        this.slotsContainer = this.scene.add.container(745, 100);
+        
+        // Setup C key to toggle inventory
+        this.cKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+        this.cKey.on('down', () => this.toggle());
         
         this.updateDisplay();
     }
 
-    updateDisplay() {
-        this.slotsContainer.removeAll(true);
+    createSlotGrid() {
+        this.slots = [];
+        const startX = 705;
+        const startY = 205;
+        const slotSize = 32;
+        const spacing = 35;
         
-        let y = 0;
-        const slotSize = 40;
-        const spacing = 45;
+        for (let row = 0; row < 6; row++) {
+            for (let col = 0; col < 2; col++) {
+                const x = startX + (col * spacing);
+                const y = startY + (row * spacing);
+                
+                // Create empty slot background
+                const slotBg = this.scene.add.graphics()
+                    .fillStyle(0x333333, 1)
+                    .fillRect(x - slotSize/2, y - slotSize/2, slotSize, slotSize)
+                    .lineStyle(1, 0x666666, 1)
+                    .strokeRect(x - slotSize/2, y - slotSize/2, slotSize, slotSize);
+                
+                this.slots.push({ x, y, slotBg, content: null });
+            }
+        }
+    }
 
-        // Display equipment
-        this.addEquipmentSlot('sword', y);
-        y += spacing;
-        this.addEquipmentSlot('shield', y);
-        y += spacing;
+    updateDisplay() {
+        // Clear existing content from slots
+        this.slots.forEach(slot => {
+            if (slot.content) {
+                slot.content.destroy();
+                slot.content = null;
+            }
+        });
+        
+        let slotIndex = 0;
 
-        // Display decorative items
+        // Add equipment to slots
+        if (gameData.inventory.sword > 0) {
+            this.addItemToSlot(slotIndex++, 'sword', gameData.inventory.sword);
+        }
+        if (gameData.inventory.shield > 0) {
+            this.addItemToSlot(slotIndex++, 'shield', gameData.inventory.shield);
+        }
+
+        // Add decorative items to slots
         if (gameData.decorationInventory) {
             Object.keys(gameData.decorationInventory).forEach(itemType => {
                 const count = gameData.decorationInventory[itemType];
-                if (count > 0) {
-                    this.addDecorationSlot(itemType, count, y);
-                    y += spacing;
+                if (count > 0 && slotIndex < this.slots.length) {
+                    this.addItemToSlot(slotIndex++, itemType, count);
                 }
             });
         }
 
-        // Display health potions
-        if (gameData.healthPotions && gameData.healthPotions > 0) {
-            this.addPotionSlot(gameData.healthPotions, y);
+        // Add health potions to slots
+        if (gameData.healthPotions && gameData.healthPotions > 0 && slotIndex < this.slots.length) {
+            this.addItemToSlot(slotIndex++, 'potion', gameData.healthPotions);
         }
     }
 
-    addEquipmentSlot(type, y) {
-        const currentTier = gameData.inventory[type] || 0;
-        if (currentTier === 0) return;
-
-        const slot = this.scene.add.graphics()
-            .fillStyle(0x444444, 1)
-            .fillRect(-18, -18, 36, 36)
-            .setInteractive(new Phaser.Geom.Rectangle(-18, -18, 36, 36), Phaser.Geom.Rectangle.Contains);
-
-        const icon = this.scene.add.text(0, 0, type === 'sword' ? '⚔️' : '🛡️', {
+    addItemToSlot(slotIndex, itemType, count) {
+        if (slotIndex >= this.slots.length) return;
+        
+        const slot = this.slots[slotIndex];
+        let icon, clickHandler;
+        
+        if (itemType === 'sword') {
+            icon = '⚔️';
+            clickHandler = () => this.handleEquipmentClick('sword');
+        } else if (itemType === 'shield') {
+            icon = '🛡️';
+            clickHandler = () => this.handleEquipmentClick('shield');
+        } else if (itemType === 'potion') {
+            icon = '🧪';
+            clickHandler = () => this.handlePotionClick();
+        } else {
+            // Decoration items
+            const decorationItems = {
+                table: '🪑',
+                plant: '🌱',
+                trophy: '🏆'
+            };
+            icon = decorationItems[itemType] || '❓';
+            clickHandler = () => this.handleDecorationClick(itemType);
+        }
+        
+        const container = this.scene.add.container(slot.x, slot.y);
+        
+        // Item icon
+        const itemIcon = this.scene.add.text(0, -6, icon, {
             fontSize: '16px'
-        }).setOrigin(0.5);
-
-        const tierText = this.scene.add.text(0, 12, `T${currentTier}`, {
-            fontSize: '8px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-
-        const container = this.scene.add.container(0, y, [slot, icon, tierText]);
+        }).setOrigin(0.5).setInteractive();
         
-        slot.on('pointerdown', () => this.handleEquipmentClick(type));
+        // Count text (if more than 1)
+        let countText = null;
+        if (count > 1 || itemType === 'sword' || itemType === 'shield') {
+            const displayText = (itemType === 'sword' || itemType === 'shield') ? `T${count}` : `x${count}`;
+            countText = this.scene.add.text(0, 8, displayText, {
+                fontSize: '8px',
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+        }
         
-        this.slotsContainer.add(container);
+        itemIcon.on('pointerdown', clickHandler);
+        
+        container.add(itemIcon);
+        if (countText) container.add(countText);
+        
+        slot.content = container;
     }
 
-    addDecorationSlot(itemType, count, y) {
-        const decorationItems = {
-            table: { icon: '🪑', name: 'Table' },
-            plant: { icon: '🌱', name: 'Plant' },
-            trophy: { icon: '🏆', name: 'Trophy' }
-        };
 
-        const item = decorationItems[itemType];
-        if (!item) return;
-
-        const slot = this.scene.add.graphics()
-            .fillStyle(0x444444, 1)
-            .fillRect(-18, -18, 36, 36)
-            .setInteractive(new Phaser.Geom.Rectangle(-18, -18, 36, 36), Phaser.Geom.Rectangle.Contains);
-
-        const icon = this.scene.add.text(0, 0, item.icon, {
-            fontSize: '16px'
-        }).setOrigin(0.5);
-
-        const countText = this.scene.add.text(0, 12, `x${count}`, {
-            fontSize: '8px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-
-        const container = this.scene.add.container(0, y, [slot, icon, countText]);
-        
-        slot.on('pointerdown', () => this.handleDecorationClick(itemType));
-        
-        this.slotsContainer.add(container);
-    }
-
-    addPotionSlot(count, y) {
-        const slot = this.scene.add.graphics()
-            .fillStyle(0x444444, 1)
-            .fillRect(-18, -18, 36, 36)
-            .setInteractive(new Phaser.Geom.Rectangle(-18, -18, 36, 36), Phaser.Geom.Rectangle.Contains);
-
-        const icon = this.scene.add.text(0, 0, '🧪', {
-            fontSize: '16px'
-        }).setOrigin(0.5);
-
-        const countText = this.scene.add.text(0, 12, `x${count}`, {
-            fontSize: '8px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-
-        const container = this.scene.add.container(0, y, [slot, icon, countText]);
-        
-        slot.on('pointerdown', () => this.handlePotionClick());
-        
-        this.slotsContainer.add(container);
-    }
 
     handleEquipmentClick(type) {
         // Equipment swapping logic would go here
@@ -242,6 +250,22 @@ class Inventory {
         this.cancelPlacement();
         this.updateDisplay();
         this.showMessage('Decoration placed!');
+    }
+
+    toggle() {
+        this.isVisible = !this.isVisible;
+        this.setVisibility(this.isVisible);
+    }
+
+    setVisibility(visible) {
+        this.background.setVisible(visible);
+        this.title.setVisible(visible);
+        this.slots.forEach(slot => {
+            slot.slotBg.setVisible(visible);
+            if (slot.content) {
+                slot.content.setVisible(visible);
+            }
+        });
     }
 
     createDecorationSprite(decoration) {
