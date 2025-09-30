@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sprite Generator</title>
+</head>
+<body>
+    <h2>Generador de Sprites de Ejemplo</h2>
+    <p>Abre las herramientas de desarrollador (F12) y ejecuta este código para generar sprites básicos:</p>
+    
+    <script>
+        // Función para crear y descargar sprites
+        function createSprite(width, height, color, name) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo
+            ctx.fillStyle = color;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Borde
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, width, height);
+            
+            // Descargar
+            const link = document.createElement('a');
+            link.download = name + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generar sprites básicos
+        function generateBasicSprites() {
+            // Player
+            createSprite(16, 16, '#00ff00', 'player');
+            
+            // Buildings
+            setTimeout(() => createSprite(64, 64, '#8b4513', 'store'), 100);
+            setTimeout(() => createSprite(64, 64, '#4169e1', 'upgrades'), 200);
+            setTimeout(() => createSprite(64, 64, '#ff69b4', 'decoration'), 300);
+            setTimeout(() => createSprite(64, 64, '#ff4500', 'arena'), 400);
+            
+            // Equipment - Swords
+            setTimeout(() => createSprite(32, 32, '#8b4513', 'sword_wooden'), 500);
+            setTimeout(() => createSprite(32, 32, '#808080', 'sword_stone'), 600);
+            setTimeout(() => createSprite(32, 32, '#ffd700', 'sword_gold'), 700);
+            setTimeout(() => createSprite(32, 32, '#c0c0c0', 'sword_iron'), 800);
+            setTimeout(() => createSprite(32, 32, '#b9f2ff', 'sword_diamond'), 900);
+            
+            // Equipment - Shields
+            setTimeout(() => createSprite(32, 32, '#654321', 'shield_wooden'), 1000);
+            setTimeout(() => createSprite(32, 32, '#696969', 'shield_stone'), 1100);
+            setTimeout(() => createSprite(32, 32, '#ffdf00', 'shield_gold'), 1200);
+            setTimeout(() => createSprite(32, 32, '#a8a8a8', 'shield_iron'), 1300);
+            setTimeout(() => createSprite(32, 32, '#e0ffff', 'shield_diamond'), 1400);
+            
+            // Items
+            setTimeout(() => createSprite(24, 24, '#ff0000', 'health_potion'), 1500);
+            
+            console.log('Sprites generados! Guárdalos en las carpetas correspondientes.');
+        }
+        
+        console.log('Ejecuta generateBasicSprites() para crear sprites de ejemplo');
+    </script>
+    
+    <button onclick="generateBasicSprites()">Generar Sprites Básicos</button>
+</body>
+</html>
