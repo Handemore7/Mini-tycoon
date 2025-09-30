@@ -250,6 +250,9 @@ class GameScene extends Phaser.Scene {
         // Initialize Konami code listener
         this.konamiDebug = new KonamiDebug(this);
         
+        // Initialize inventory
+        this.inventory = new Inventory(this);
+        
         // Resume physics
         this.physics.resume();
     }

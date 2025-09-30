@@ -60,16 +60,25 @@ class Decorations {
         this.plantButton = this.createDecorationButton(400, 200, 'plant');
         this.trophyButton = this.createDecorationButton(550, 200, 'trophy');
 
+        // Inventory section
+        this.inventoryTitle = this.scene.add.text(400, 320, 'INVENTORY', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0.5).setVisible(false);
+
+        this.inventoryContainer = this.scene.add.container(400, 360).setVisible(false);
+
         // Instructions
-        this.instructionsText = this.scene.add.text(400, 400, 
-            'Click item to place • Right-click placed items to move them', {
-            fontSize: '12px',
+        this.instructionsText = this.scene.add.text(400, 450, 
+            'Buy items above • Click inventory items to place • Right-click placed items to move', {
+            fontSize: '11px',
             fill: '#cccccc'
         }).setOrigin(0.5).setVisible(false);
 
         this.elements = [this.background, this.title, this.closeButton, 
                         this.tableButton.container, this.plantButton.container, this.trophyButton.container,
-                        this.instructionsText];
+                        this.inventoryTitle, this.inventoryContainer, this.instructionsText];
     }
 
     createDecorationButton(x, y, itemType) {
@@ -131,16 +140,40 @@ class Decorations {
     selectDecoration(itemType) {
         const item = this.decorationItems[itemType];
         
-        // Handle purchase
-        if (item.unlockType === 'purchase' && !gameData.spendMoney(item.cost)) {
-            this.showMessage('Not enough money!', '#ff0000');
-            return;
+        // Handle purchase - add to inventory
+        if (item.unlockType === 'purchase') {
+            if (!gameData.spendMoney(item.cost)) {
+                this.showMessage('Not enough money!', '#ff0000');
+                return;
+            }
+            // Add to inventory
+            if (!gameData.decorationInventory) gameData.decorationInventory = {};
+            gameData.decorationInventory[itemType] = (gameData.decorationInventory[itemType] || 0) + 1;
+            gameData.save();
+            
+            // Update inventory display
+            if (this.scene.inventory) {
+                this.scene.inventory.updateDisplay();
+            }
+            
+            this.showMessage(`${item.name} added to inventory!`);
+            this.updateButtons();
+        } else {
+            // For unlocked items, add to inventory if not already there
+            if (!gameData.decorationInventory) gameData.decorationInventory = {};
+            if (!gameData.decorationInventory[itemType]) {
+                gameData.decorationInventory[itemType] = 1;
+                gameData.save();
+                
+                // Update inventory display
+                if (this.scene.inventory) {
+                    this.scene.inventory.updateDisplay();
+                }
+                
+                this.showMessage(`${item.name} added to inventory!`);
+                this.updateButtons();
+            }
         }
-
-        this.selectedDecoration = itemType;
-        this.placementMode = true;
-        this.close();
-        this.enterPlacementMode();
     }
 
     enterPlacementMode() {
@@ -179,6 +212,14 @@ class Decorations {
     placeDecoration(pointer) {
         if (!this.placementMode) return;
 
+        // Remove from inventory
+        if (gameData.decorationInventory[this.selectedDecoration] > 0) {
+            gameData.decorationInventory[this.selectedDecoration]--;
+            if (gameData.decorationInventory[this.selectedDecoration] === 0) {
+                delete gameData.decorationInventory[this.selectedDecoration];
+            }
+        }
+
         const decoration = {
             type: this.selectedDecoration,
             x: pointer.x,
@@ -200,11 +241,9 @@ class Decorations {
     createDecorationSprite(decoration) {
         const item = this.decorationItems[decoration.type];
         
-        // Create decoration sprite
-        const sprite = this.scene.add.graphics()
-            .fillStyle(0x8B4513)
-            .fillRect(0, 0, item.size.width, item.size.height)
-            .setPosition(decoration.x, decoration.y);
+        // Create invisible decoration sprite for collision
+        const sprite = this.scene.add.rectangle(decoration.x + item.size.width/2, decoration.y + item.size.height/2, 
+                                               item.size.width, item.size.height, 0x000000, 0);
 
         // Add physics for collision
         this.scene.physics.add.existing(sprite, true); // true = static body
@@ -212,7 +251,7 @@ class Decorations {
         // Add icon text
         const iconText = this.scene.add.text(decoration.x + item.size.width/2, decoration.y + item.size.height/2, 
             item.icon, {
-            fontSize: '16px'
+            fontSize: '24px'
         }).setOrigin(0.5);
 
         // Right-click to move
@@ -330,10 +369,44 @@ class Decorations {
         this.plantButton = this.createDecorationButton(400, 200, 'plant');
         this.trophyButton = this.createDecorationButton(550, 200, 'trophy');
         
+        // Update inventory display
+        this.updateInventoryDisplay();
+        
         // Update elements array
         this.elements = [this.background, this.title, this.closeButton, 
                         this.tableButton.container, this.plantButton.container, this.trophyButton.container,
-                        this.instructionsText];
+                        this.inventoryTitle, this.inventoryContainer, this.instructionsText];
+    }
+
+    updateInventoryDisplay() {
+        this.inventoryContainer.removeAll(true);
+        
+        if (!gameData.decorationInventory) return;
+        
+        let x = -150;
+        Object.keys(gameData.decorationInventory).forEach(itemType => {
+            const count = gameData.decorationInventory[itemType];
+            if (count > 0) {
+                const item = this.decorationItems[itemType];
+                const button = this.scene.add.text(x, 0, `${item.icon}\n${item.name}\nx${count}`, {
+                    fontSize: '10px',
+                    fill: '#ffffff',
+                    backgroundColor: '#333333',
+                    padding: { x: 8, y: 6 },
+                    align: 'center'
+                }).setOrigin(0.5).setInteractive();
+                
+                button.on('pointerdown', () => {
+                    this.selectedDecoration = itemType;
+                    this.placementMode = true;
+                    this.close();
+                    this.enterPlacementMode();
+                });
+                
+                this.inventoryContainer.add(button);
+                x += 100;
+            }
+        });
     }
 
     showMessage(message, color = '#00ff00') {

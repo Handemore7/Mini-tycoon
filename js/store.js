@@ -92,9 +92,15 @@ class Store {
     buyItem(itemType) {
         if (itemType === 'potion') {
             if (gameData.spendMoney(this.items.potion.price)) {
-                gameData.stats.health = Math.min(gameData.stats.health + this.items.potion.healing, gameData.stats.maxHealth);
+                gameData.healthPotions = (gameData.healthPotions || 0) + 1;
                 gameData.save();
-                this.showPurchaseMessage(`Bought Health Potion! +${this.items.potion.healing} HP`);
+                
+                // Update inventory display
+                if (this.scene.inventory) {
+                    this.scene.inventory.updateDisplay();
+                }
+                
+                this.showPurchaseMessage(`Health Potion added to inventory!`);
             } else {
                 this.showPurchaseMessage('Not enough money!', '#ff0000');
             }
@@ -117,6 +123,12 @@ class Store {
                 }
                 
                 gameData.updateStats(gameData.stats);
+                
+                // Update inventory display
+                if (this.scene.inventory) {
+                    this.scene.inventory.updateDisplay();
+                }
+                
                 this.showPurchaseMessage(`Bought ${this.items[itemType].tiers[currentTier]} ${this.items[itemType].name}!`);
                 this.updateButtons();
             } else {
