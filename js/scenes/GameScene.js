@@ -238,8 +238,17 @@ class GameScene extends Phaser.Scene {
         // Initialize upgrades system
         this.upgradesSystem = new Upgrades(this);
         
+        // Initialize decoration system
+        this.decorationSystem = new Decorations(this);
+        
         // Initialize Twitch chat
         this.twitchChat = new TwitchChat(this);
+        
+        // Load existing decorations
+        this.decorationSystem.loadExistingDecorations();
+        
+        // Initialize Konami code listener
+        this.konamiDebug = new KonamiDebug(this);
         
         // Resume physics
         this.physics.resume();
@@ -266,7 +275,8 @@ class GameScene extends Phaser.Scene {
 
     isAnyStoreOpen() {
         return (this.storeSystem && this.storeSystem.isOpen) || 
-               (this.upgradesSystem && this.upgradesSystem.isOpen);
+               (this.upgradesSystem && this.upgradesSystem.isOpen) ||
+               (this.decorationSystem && this.decorationSystem.isOpen);
     }
 
     update() {

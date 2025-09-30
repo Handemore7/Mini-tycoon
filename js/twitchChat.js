@@ -73,6 +73,11 @@ class TwitchChat {
         this.lastMessageTime = now;
         this.messageCount++;
         
+        // Update chat streak
+        if (this.scene.decorationSystem) {
+            this.scene.decorationSystem.updateChatStreak();
+        }
+        
         const reward = gameData.chatBonus || 10;
         gameData.addMoney(reward);
         this.showChatReward(reward);

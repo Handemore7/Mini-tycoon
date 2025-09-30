@@ -24,7 +24,10 @@ class SaveSystem {
                 decorations: gameData.decorations,
                 upgrades: gameData.upgrades,
                 passiveIncome: gameData.passiveIncome,
-                chatBonus: gameData.chatBonus
+                chatBonus: gameData.chatBonus,
+                chatStreak: gameData.chatStreak,
+                lastChatDate: gameData.lastChatDate,
+                arenaWins: gameData.arenaWins
             };
 
             // Save main game data
@@ -88,6 +91,9 @@ class SaveSystem {
         gameData.upgrades = saveData.upgrades || { boots: 0, passiveIncome: 0, activeIncome: 0 };
         gameData.passiveIncome = saveData.passiveIncome || 1;
         gameData.chatBonus = saveData.chatBonus || 10;
+        gameData.chatStreak = saveData.chatStreak || 0;
+        gameData.lastChatDate = saveData.lastChatDate || null;
+        gameData.arenaWins = saveData.arenaWins || 0;
     }
 
     // Create rotating backups

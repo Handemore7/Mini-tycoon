@@ -62,8 +62,9 @@ class Building extends Phaser.Physics.Arcade.Sprite {
     }
 
     openDecoration(scene) {
-        console.log('Decoration opened - Furniture placement mode');
-        // TODO: Implement decoration UI
+        if (scene.decorationSystem) {
+            scene.decorationSystem.open();
+        }
     }
 
     openFights(scene) {

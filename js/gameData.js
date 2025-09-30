@@ -18,6 +18,9 @@ class GameData {
         this.upgrades = { boots: 0, passiveIncome: 0, activeIncome: 0 };
         this.passiveIncome = 1;
         this.chatBonus = 10;
+        this.chatStreak = 0;
+        this.lastChatDate = null;
+        this.arenaWins = 0;
         
         // Load saved data if available
         this.loadGame();
@@ -61,6 +64,9 @@ class GameData {
         this.upgrades = JSON.parse(localStorage.getItem('upgrades')) || { boots: 0, passiveIncome: 0, activeIncome: 0 };
         this.passiveIncome = parseInt(localStorage.getItem('passiveIncome')) || 1;
         this.chatBonus = parseInt(localStorage.getItem('chatBonus')) || 10;
+        this.chatStreak = parseInt(localStorage.getItem('chatStreak')) || 0;
+        this.lastChatDate = localStorage.getItem('lastChatDate') || null;
+        this.arenaWins = parseInt(localStorage.getItem('arenaWins')) || 0;
     }
 
     applySaveData(saveData) {
@@ -74,6 +80,9 @@ class GameData {
         this.upgrades = saveData.upgrades || { boots: 0, passiveIncome: 0, activeIncome: 0 };
         this.passiveIncome = saveData.passiveIncome || 1;
         this.chatBonus = saveData.chatBonus || 10;
+        this.chatStreak = saveData.chatStreak || 0;
+        this.lastChatDate = saveData.lastChatDate || null;
+        this.arenaWins = saveData.arenaWins || 0;
     }
 
     save() {
