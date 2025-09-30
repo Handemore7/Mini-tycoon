@@ -59,23 +59,26 @@ class GameScene extends Phaser.Scene {
             this.add.image(400, 300, 'background').setDisplaySize(800, 600);
         } else {
             // Fallback background
-            this.add.graphics()
-                .fillStyle(0x2c3e50)
-                .fillRect(0, 0, 800, 600)
-                .generateTexture('bg_fallback', 800, 600);
+            const bgGraphics = this.add.graphics();
+            bgGraphics.fillStyle(0x2c3e50);
+            bgGraphics.fillRect(0, 0, 800, 600);
+            bgGraphics.generateTexture('bg_fallback', 800, 600);
+            bgGraphics.destroy();
             this.add.image(400, 300, 'bg_fallback');
         }
         
-        // Create fallback textures
-        this.add.graphics()
-            .fillStyle(0x00ff00)
-            .fillRect(0, 0, 48, 48)
-            .generateTexture('player_fallback', 48, 48);
+        // Create fallback textures without visible graphics
+        const playerGraphics = this.add.graphics();
+        playerGraphics.fillStyle(0x00ff00);
+        playerGraphics.fillRect(0, 0, 48, 48);
+        playerGraphics.generateTexture('player_fallback', 48, 48);
+        playerGraphics.destroy();
 
-        this.add.graphics()
-            .fillStyle(0x8b4513)
-            .fillRect(0, 0, 64, 64)
-            .generateTexture('building', 64, 64);
+        const buildingGraphics = this.add.graphics();
+        buildingGraphics.fillStyle(0x8b4513);
+        buildingGraphics.fillRect(0, 0, 64, 64);
+        buildingGraphics.generateTexture('building', 64, 64);
+        buildingGraphics.destroy();
             
         // Check if player name is set, if not show prompt
         if (!gameData.playerName || gameData.playerName.trim() === '') {

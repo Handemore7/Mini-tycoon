@@ -218,6 +218,16 @@ class Inventory {
     placeDecoration(pointer) {
         if (!this.placementMode) return;
 
+        // Check UI boundaries - prevent placement in UI areas
+        if (pointer.x < 150 && pointer.y < 100) { // Top-left coin area
+            this.showMessage('Cannot place here - UI area', '#ff0000');
+            return;
+        }
+        if (pointer.x > 650) { // Right side inventory area
+            this.showMessage('Cannot place here - UI area', '#ff0000');
+            return;
+        }
+
         // Remove from inventory
         if (gameData.decorationInventory[this.selectedItem] > 0) {
             gameData.decorationInventory[this.selectedItem]--;
