@@ -67,6 +67,7 @@ class Building extends Phaser.Physics.Arcade.Sprite {
     openFights(scene) {
         if (scene.arenaSystem) {
             scene.arenaSystem.open();
+            scene.arenaSystem.start();
         }
     }
 }

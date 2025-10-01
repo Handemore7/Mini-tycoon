@@ -373,7 +373,8 @@ class GameScene extends Phaser.Scene {
     isAnyStoreOpen() {
         return (this.storeSystem && this.storeSystem.isOpen) || 
                (this.upgradesSystem && this.upgradesSystem.isOpen) ||
-               (this.decorationSystem && this.decorationSystem.isOpen);
+               (this.decorationSystem && this.decorationSystem.isOpen) ||
+               (this.arenaSystem && this.arenaSystem.isOpen);
     }
 
     update() {

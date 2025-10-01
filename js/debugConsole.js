@@ -90,13 +90,45 @@ class DebugConsole {
             this.showMessage('All upgrades maxed!');
         });
 
-        this.speedBtn = this.createButton(120, buttonY + 60, 'Super Speed', () => {
-            gameData.stats.moveSpeed = 500;
+        // Individual stat buttons
+        this.maxHealthBtn = this.createButton(120, buttonY + 60, 'Max Health', () => {
+            gameData.stats.health = 9999;
+            gameData.stats.maxHealth = 9999;
             gameData.save();
-            this.showMessage('Super speed activated!');
+            this.showMessage('Health maxed!');
         });
 
-        this.resetBtn = this.createButton(520, buttonY + 60, 'Reset Stats', () => {
+        this.maxDamageBtn = this.createButton(220, buttonY + 60, 'Max Damage', () => {
+            gameData.stats.damage = 999;
+            gameData.save();
+            this.showMessage('Damage maxed!');
+        });
+
+        this.maxArmorBtn = this.createButton(320, buttonY + 60, 'Max Armor', () => {
+            gameData.stats.armor = 999;
+            gameData.save();
+            this.showMessage('Armor maxed!');
+        });
+
+        this.maxSpeedBtn = this.createButton(420, buttonY + 60, 'Max Speed', () => {
+            gameData.stats.moveSpeed = 999;
+            gameData.save();
+            this.showMessage('Speed maxed!');
+        });
+
+        this.maxCritBtn = this.createButton(520, buttonY + 60, 'Max Crit', () => {
+            gameData.stats.criticalChance = 100;
+            gameData.save();
+            this.showMessage('Critical chance maxed!');
+        });
+
+        this.maxAttackSpeedBtn = this.createButton(620, buttonY + 60, 'Max Att.Speed', () => {
+            gameData.stats.attackSpeed = 10;
+            gameData.save();
+            this.showMessage('Attack speed maxed!');
+        });
+
+        this.resetBtn = this.createButton(320, buttonY + 120, 'Reset Stats', () => {
             gameData.money = 100;
             gameData.stats = {
                 health: 100,
@@ -104,7 +136,8 @@ class DebugConsole {
                 damage: 10,
                 attackSpeed: 1,
                 moveSpeed: 100,
-                armor: 0
+                armor: 0,
+                criticalChance: 10
             };
             gameData.inventory = { sword: 0, shield: 0 };
             gameData.upgrades = { boots: 0, passiveIncome: 0, activeIncome: 0 };
@@ -114,7 +147,7 @@ class DebugConsole {
             this.showMessage('Stats reset to default!');
         });
 
-        this.exitBtn = this.createButton(620, buttonY + 60, 'Exit', () => {
+        this.exitBtn = this.createButton(520, buttonY + 120, 'Exit', () => {
             this.toggle();
         });
     }

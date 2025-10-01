@@ -11,7 +11,8 @@ class GameData {
             damage: 10,
             attackSpeed: 1,
             moveSpeed: 100,
-            armor: 0
+            armor: 0,
+            criticalChance: 10
         };
         this.inventory = { sword: 0, shield: 0 };
         this.decorations = [];

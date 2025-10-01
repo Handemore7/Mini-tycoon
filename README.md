@@ -1,6 +1,6 @@
 # Mini Tycoon Game
 
-A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
+A 2D pixel art tycoon game designed to encourage Twitch chat engagement with modular architecture.
 
 ## Features
 
@@ -13,6 +13,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Cloud Save System**: Firebase Firestore database with localStorage fallback
 - **Inventory System**: Persistent right-side inventory with C key toggle
 - **Debug Console**: Konami Code (WWSSADAD+Enter) for comprehensive debugging
+- **Modular Architecture**: Organized codebase with separated concerns
 
 ## Setup
 
@@ -52,7 +53,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
   - Passive Income: Increases coins per 5 seconds (+1 per tier)
   - Chat Bonus: Increases coins per chat message (+5 per tier)
 - **Decoration** (Bottom-left): Buy and place furniture - Coming Soon
-- **Arena** (Bottom-right): Interactive survival combat with timing-based mechanics
+- **Dungeon** (Bottom-right): D&D-style turn-based combat with 20 floors
 
 ## Current Status
 
@@ -83,7 +84,12 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Persistent inventory system with C key toggle
 ✅ Debug console with Konami Code activation
 ✅ Menu depth management (always on top)
-✅ Interactive Arena survival system with progressive difficulty
+✅ D&D-style turn-based dungeon system (20 floors)
+✅ Boss fights with status effects (poison, wounded)
+✅ Critical chance and dodge mechanics
+✅ Strategic combat with potion management
+✅ Smart boss AI (avoids duplicate status effects)
+✅ Color-coded combat log with visual feedback system
 ✅ Achievement system with decoration unlocks
 ✅ Event-driven save system (replaces auto-save timer)
 ✅ Complete data deletion with Firebase integration
@@ -131,6 +137,13 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 
 **Konami Code Activation (WWSSADAD+Enter):**
 - **Stat Modification**: Buttons for money, health, equipment tiers
+- **Individual Stat Maxing**: Separate buttons for each character stat
+  - Max Health (9999 HP)
+  - Max Damage (999 damage)
+  - Max Armor (999 armor)
+  - Max Speed (999 movement speed)
+  - Max Critical Chance (100%)
+  - Max Attack Speed (10x)
 - **Inventory Management**: Add/remove decorations and potions
 - **Upgrade Controls**: Modify all upgrade tiers instantly
 - **Browser Console**: Direct access to gameData object
@@ -185,11 +198,11 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 
 ## Next Steps
 
-1. **Phase 3 Arena**: Add Twitch chat integration for combat
-2. **Arena Leaderboards**: Global and weekly competition systems
+1. **Enhanced Dungeon**: More status effects and boss mechanics
+2. **Dungeon Leaderboards**: Global floor completion rankings
 3. **More Achievements**: Additional unlock conditions and rewards
 4. **Enhanced Twitch**: OAuth integration for advanced features
-5. **Visual Upgrades**: Equipment sprites and combat animations
+5. **Visual Upgrades**: Enemy sprites and combat animations
 6. **Sound System**: Combat effects and background music
 7. **Multiplayer Features**: Real-time player interactions
 8. **Advanced Combat**: Special abilities and equipment skills
@@ -218,32 +231,85 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Player validation**: Secure player name format enforcement
 - **Complete deletion**: Remove data from both Firebase and localStorage
 
-## Arena System
+## Dungeon System (D&D-Style Turn-Based Combat)
 
-**Interactive Survival Combat:**
-- **Attack Phase**: Left-click timing for critical hits (1.5x damage)
-- **Defense Phase**: Spacebar to block incoming attacks (50% damage reduction)
-- **Progressive Difficulty**: Timing windows get smaller and faster each wave
-- **Combo System**: Chain successful actions for bonus damage and coins
-- **Wave Progression**: 5 enemy types with increasing difficulty
+**20-Floor Dungeon Crawler:**
+- **Turn-Based Combat**: Strategic player vs enemy alternating turns
+- **Text-Based Interface**: Clean combat log showing all actions and results
+- **Progressive Difficulty**: Enemies scale in power every floor (15% increase)
+- **Boss Fights**: Special encounters every 5th floor (5, 10, 15, 20)
+- **Death Penalty**: Keep 50% of earned coins when defeated
 
-**Combat Mechanics:**
-- **Perfect Timing**: Green zone for critical hits and perfect blocks
-- **Good Timing**: Yellow zone for bonus damage
-- **Miss Penalty**: Resets combo and takes full damage
-- **Skill Progression**: Players improve timing abilities over waves
+**Player Turn Actions:**
+- **Attack**: Basic damage with critical chance system
+- **Critical Attacks**: Timing mini-game for 2x damage when triggered
+- **Use Potion**: Heal 50 HP (consumes turn, blocked when wounded)
 
-**Rewards:**
-- **Wave Rewards**: 10-200+ coins per wave based on difficulty
-- **Combo Bonuses**: Extra coins for maintaining streaks
-- **Milestone Rewards**: Special bonuses at waves 5, 10, 15, 20, 25
-- **Death Protection**: Keep 50% of earned coins when defeated
+**Enemy Turn Mechanics:**
+- **Normal Attacks**: Standard damage with dodge opportunities
+- **Dodge Events**: Press spacebar to reduce damage by 50%
+- **Boss Special Attacks**: Status effects with 1-turn preparation
 
-**Difficulty Scaling:**
-- **Attack Speed**: Bar moves faster each wave (+0.3 speed, max +4)
-- **Perfect Zone**: Critical hit window shrinks (-0.5% per wave, min 4%)
-- **Reaction Time**: Less time to block (-0.05s per wave, min 0.8s)
-- **Time Pressure**: Shorter overall timing windows
+**Boss Fight System:**
+- **Mixed Combat**: Bosses use both normal and special attacks
+- **Special Attack Preparation**: Bosses announce special attacks 1 turn ahead
+- **Smart Targeting**: Bosses won't use status effects player already has
+- **Status Effects**: Poison (3 damage/turn) and Wounded (blocks potions)
+
+**Combat Stats:**
+- **Critical Chance**: 10% base + 5% per sword tier (max 50%)
+- **Dodge Chance**: Based on movement speed (max 70%)
+- **Status Duration**: 1-3 turns randomly determined
+- **Armor Reduction**: Reduces incoming damage
+
+## Dungeon Enemies
+
+**Regular Enemies (Floors 1-19):**
+- **Goblin** → **Orc Warrior** → **Skeleton** → **Dark Mage** → **Troll** → **Minotaur** → **Dragon** → **Lich King**
+
+**Boss Enemies (Floors 5, 10, 15, 20):**
+- **Floor 5**: Poison Spider Queen
+- **Floor 10**: Cursed Necromancer  
+- **Floor 15**: Toxic Hydra
+- **Floor 20**: Ancient Lich Lord
+
+## Status Effects
+
+**🐍 Poisoned:**
+- **Effect**: Lose 3 HP at start of each turn
+- **Duration**: 1-3 turns (random)
+- **Source**: Boss poison breath attacks
+- **Visual**: Green snake emoji in player stats
+
+**🩸 Wounded:**
+- **Effect**: Cannot use health potions
+- **Duration**: 1-3 turns (random)  
+- **Source**: Boss cursed strike attacks
+- **Visual**: Red drop emoji in player stats, grayed potion button
+
+**Boss Intelligence:**
+- Bosses won't use status attacks if player already has that effect
+- Can alternate between normal attacks and available special attacks
+- Special attacks require 1 turn preparation with warning message
+
+## Color-Coded Combat Log
+
+**Multi-Color Text System:**
+- **White (#ffffff)**: Base text and descriptions
+- **Yellow (#ffff00)**: Coin amounts and rewards
+- **Red (#ff6666)**: Damage numbers and negative effects
+- **Green (#00ff00)**: Health, healing, and positive effects
+- **Blue (#0099ff)**: Interactive prompts and dodge instructions
+- **Orange (#ff6600)**: Critical hits and boss attacks
+- **Light Red (#ff9999)**: Enemy names and wound effects
+- **Light Green (#99ff99)**: Poison effects
+
+**Features:**
+- **Keyword Highlighting**: Only important words are colored, rest stays white
+- **Scrollable History**: Mouse wheel scrolling through combat log
+- **Auto-scroll**: New messages automatically scroll to bottom
+- **Segment-based**: Multiple colors within single message lines
+- **Real-time Updates**: Immediate visual feedback for all combat events
 
 ## Achievement System
 
@@ -270,10 +336,11 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **ESC Key**: Open settings menu
 - **Walk Into Buildings**: Only way to interact with buildings (no clicking)
 
-**Arena Combat:**
-- **Left Click**: Attack timing for critical hits
-- **Spacebar**: Block incoming attacks
-- **Timing**: Hit perfect zones for maximum effectiveness
+**Dungeon Combat:**
+- **Attack Button**: Initiate attack (may trigger critical timing event)
+- **Use Potion Button**: Heal 50 HP (disabled when wounded)
+- **Left Click**: During critical events, click in green zone for 2x damage
+- **Spacebar**: During dodge events, press to reduce damage by 50%
 
 **Debug:**
 - **Konami Code** (WWSSADAD+Enter): Open debug console
@@ -293,3 +360,17 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Inventory**: Persistent 2x6 grid system with item management
 - **Debug Tools**: Konami Code activation with comprehensive controls
 - **Deployment**: GitHub Pages with secure credential management
+
+## Modular Architecture
+
+### Arena System Modules
+- **`EnemyGenerator.js`**: Enemy and boss generation with floor-based scaling
+- **`CombatLog.js`**: Multi-colored scrollable combat text display
+- **`CombatSystem.js`**: Turn-based combat mechanics and status effects
+- **`arena.js`**: Main arena coordinator and UI management
+
+### Benefits
+- **Maintainable**: Each module has single responsibility
+- **Scalable**: Easy to add new features without affecting existing code
+- **Readable**: Logical code organization and separation of concerns
+- **Testable**: Isolated modules for easier debugging and testing

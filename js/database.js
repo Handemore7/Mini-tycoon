@@ -191,7 +191,7 @@ class Database {
           twitchStreamer: twitchStreamer || 'your_streamer_name',
           volume: 0.5,
           money: 100,
-          stats: { health: 100, maxHealth: 100, damage: 10, attackSpeed: 1, moveSpeed: 100, armor: 0 },
+          stats: { health: 100, maxHealth: 100, damage: 10, attackSpeed: 1, moveSpeed: 100, armor: 0, criticalChance: 10 },
           inventory: { sword: 0, shield: 0 },
           decorations: [],
           upgrades: { boots: 0, passiveIncome: 0, activeIncome: 0 },
