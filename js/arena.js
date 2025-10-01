@@ -22,30 +22,40 @@ class Arena {
     }
 
     createInterface() {
+        // Main background with rounded corners
         this.background = this.scene.add.graphics()
-            .fillStyle(0x000000, 0.95)
-            .fillRect(0, 0, 800, 600)
+            .fillStyle(0x1a1a1a, 0.98)
+            .fillRoundedRect(20, 20, 760, 560, 15)
+            .lineStyle(3, 0x444444, 1)
+            .strokeRoundedRect(20, 20, 760, 560, 15)
             .setVisible(false);
         
-        this.title = this.scene.add.text(400, 30, 'DUNGEON', {
-            fontSize: '28px',
+        // Header section
+        this.headerBg = this.scene.add.graphics()
+            .fillStyle(0x8b0000, 1)
+            .fillRoundedRect(20, 20, 760, 60, 15)
+            .setVisible(false);
+        
+        this.title = this.scene.add.text(400, 50, 'COMBAT ARENA', {
+            fontSize: '24px',
             fill: '#ffffff',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
+        this.closeButton = this.scene.add.text(750, 50, '✕', {
+            fontSize: '18px',
+            fill: '#ff6b6b',
+            backgroundColor: '#333333',
+            padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setVisible(false).setInteractive();
+        this.closeButton.on('pointerdown', () => this.close());
+
         // Description
-        this.description = this.scene.add.text(400, 60, 'Battle through 20 floors of turn-based combat for coins and glory!', {
+        this.description = this.scene.add.text(400, 90, 'Battle through 20 floors of turn-based combat for coins and glory!', {
             fontSize: '14px',
             fill: '#cccccc',
             align: 'center'
         }).setOrigin(0.5).setVisible(false);
-
-        this.closeButton = this.scene.add.text(750, 30, 'X', {
-            fontSize: '20px',
-            fill: '#ff0000',
-            fontWeight: 'bold'
-        }).setOrigin(0.5).setVisible(false).setInteractive();
-        this.closeButton.on('pointerdown', () => this.close());
 
         this.floorText = this.scene.add.text(400, 90, '', {
             fontSize: '18px',
@@ -85,30 +95,42 @@ class Arena {
         this.attackBar = this.scene.add.graphics().setVisible(false);
         this.defenseOverlay = this.scene.add.graphics().setVisible(false);
 
-        this.attackButton = this.scene.add.text(200, 530, 'ATTACK', {
+        this.attackButton = this.scene.add.text(200, 520, 'ATTACK', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#cc0000',
             padding: { x: 15, y: 8 }
-        }).setOrigin(0.5).setVisible(false).setInteractive();
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
         
-        this.nextFloorButton = this.scene.add.text(600, 530, 'NEXT FLOOR', {
+        this.nextFloorButton = this.scene.add.text(600, 520, 'NEXT FLOOR', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#0066cc',
             padding: { x: 15, y: 8 }
-        }).setOrigin(0.5).setVisible(false).setInteractive();
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
         
-        this.potionButton = this.scene.add.text(400, 530, 'USE POTION', {
+        this.potionButton = this.scene.add.text(400, 520, 'USE POTION', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#00cc66',
             padding: { x: 15, y: 8 }
-        }).setOrigin(0.5).setVisible(false).setInteractive();
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
 
-        this.elements = [this.background, this.title, this.description, this.closeButton, this.floorText,
+
+
+        // Start button for new runs
+        this.startButton = this.scene.add.text(400, 520, 'START DUNGEON RUN', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            backgroundColor: '#27ae60',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
+        this.startButton.on('pointerdown', () => this.start());
+
+        this.elements = [this.background, this.headerBg, this.title, this.closeButton, this.description, this.floorText,
                        this.combatLogContainer, this.playerStats, this.enemyStats, this.actionPrompt,
-                       this.attackBar, this.defenseOverlay, this.attackButton, this.nextFloorButton, this.potionButton];
+                       this.attackBar, this.defenseOverlay, this.attackButton, this.nextFloorButton, this.potionButton,
+                       this.startButton];
     }
 
     setupInputHandlers() {
@@ -364,6 +386,12 @@ class Arena {
             this.floorText.setText(`Floor ${this.currentFloor}/${this.maxFloors} | Coins: ${this.totalCoinsEarned}`);
         }
         
+        // Show/hide start button based on game state
+        if (this.startButton) {
+            const showStart = !this.currentEnemy && this.currentFloor === 1 && this.totalCoinsEarned === 0;
+            this.startButton.setVisible(showStart);
+        }
+        
         const health = this.currentHealth || (gameData?.stats?.health || 100);
         const maxHealth = gameData?.stats?.maxHealth || 100;
         const damage = gameData?.stats?.damage || 10;
@@ -491,6 +519,8 @@ class Arena {
     }
     
     start() {
-        this.startDungeon();
+        if (!this.currentEnemy && this.currentFloor === 1 && this.totalCoinsEarned === 0) {
+            this.startDungeon();
+        }
     }
 }

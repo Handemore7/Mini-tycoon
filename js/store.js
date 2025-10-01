@@ -163,10 +163,11 @@ class Store {
         
         // Item name
         const nameText = this.scene.add.text(0, -5, itemName, {
-            fontSize: '12px',
+            fontSize: '10px',
             fill: '#ffffff',
             fontWeight: 'bold',
-            align: 'center'
+            align: 'center',
+            wordWrap: { width: 130 }
         }).setOrigin(0.5);
         
         // Tier progress bar for equipment
@@ -193,8 +194,10 @@ class Store {
                     this.items.shield.armor[currentTier];
                 const statName = itemType === 'sword' ? 'DMG' : 'ARM';
                 statsText = this.scene.add.text(0, 25, `${currentStat} → ${nextStat} ${statName}`, {
-                    fontSize: '9px',
-                    fill: '#4ecdc4'
+                    fontSize: '10px',
+                    fill: '#4ecdc4',
+                    align: 'center',
+                    wordWrap: { width: 120 }
                 }).setOrigin(0.5);
             } else {
                 const maxStat = itemType === 'sword' ? 
@@ -202,14 +205,17 @@ class Store {
                     this.items.shield.armor[4];
                 const statName = itemType === 'sword' ? 'DMG' : 'ARM';
                 statsText = this.scene.add.text(0, 25, `${maxStat} ${statName} (MAX)`, {
-                    fontSize: '9px',
-                    fill: '#95a5a6'
+                    fontSize: '10px',
+                    fill: '#95a5a6',
+                    align: 'center',
+                    wordWrap: { width: 120 }
                 }).setOrigin(0.5);
             }
         } else {
             statsText = this.scene.add.text(0, 25, '+50 HP', {
                 fontSize: '10px',
-                fill: '#e74c3c'
+                fill: '#e74c3c',
+                align: 'center'
             }).setOrigin(0.5);
         }
         

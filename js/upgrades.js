@@ -32,73 +32,130 @@ class Upgrades {
     }
 
     createInterface() {
-        // Background panel
+        // Main background with rounded corners
         this.background = this.scene.add.graphics()
-            .fillStyle(0x000000, 0.9)
-            .fillRect(100, 80, 600, 440)
+            .fillStyle(0x1a1a1a, 0.95)
+            .fillRoundedRect(100, 80, 600, 440, 15)
+            .lineStyle(2, 0x444444, 1)
+            .strokeRoundedRect(100, 80, 600, 440, 15)
+            .setVisible(false);
+        
+        // Header section
+        this.headerBg = this.scene.add.graphics()
+            .fillStyle(0x2c3e50, 1)
+            .fillRoundedRect(100, 80, 600, 60, 15)
             .setVisible(false);
         
         // Title
-        this.title = this.scene.add.text(400, 110, 'UPGRADES', {
-            fontSize: '24px',
+        this.title = this.scene.add.text(400, 110, 'CHARACTER UPGRADES', {
+            fontSize: '22px',
             fill: '#ffffff',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
+        // Close button
+        this.closeButton = this.scene.add.text(670, 110, '✕', {
+            fontSize: '18px',
+            fill: '#ff6b6b',
+            backgroundColor: '#333333',
+            padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setVisible(false).setInteractive();
+        this.closeButton.on('pointerdown', () => this.close());
+
         // Description
-        this.description = this.scene.add.text(400, 140, 'Improve your character stats with permanent upgrades', {
+        this.description = this.scene.add.text(400, 160, 'Improve your character stats with permanent upgrades', {
             fontSize: '14px',
             fill: '#cccccc',
             align: 'center'
         }).setOrigin(0.5).setVisible(false);
 
-        // Close button
-        this.closeButton = this.scene.add.text(670, 90, 'X', {
-            fontSize: '20px',
-            fill: '#ff0000',
-            backgroundColor: '#333333',
-            padding: { x: 8, y: 4 }
-        }).setOrigin(0.5).setVisible(false).setInteractive();
-        this.closeButton.on('pointerdown', () => this.close());
+        // Upgrade cards
+        this.bootsCard = this.createUpgradeCard(220, 280, 'boots');
+        this.passiveCard = this.createUpgradeCard(400, 280, 'passiveIncome');
+        this.activeCard = this.createUpgradeCard(580, 280, 'activeIncome');
 
-        // Upgrade buttons with better spacing
-        this.bootsButton = this.createUpgradeButton(400, 180, 'boots');
-        this.passiveButton = this.createUpgradeButton(400, 260, 'passiveIncome');
-        this.activeButton = this.createUpgradeButton(400, 340, 'activeIncome');
+        // Bottom info section
+        this.infoBg = this.scene.add.graphics()
+            .fillStyle(0x34495e, 1)
+            .fillRoundedRect(120, 420, 560, 80, 10)
+            .setVisible(false);
 
-        this.elements = [this.background, this.title, this.description, this.closeButton, 
-                        this.bootsButton.container, this.passiveButton.container, this.activeButton.container];
+        // Money display
+        this.moneyText = this.scene.add.text(400, 460, '', {
+            fontSize: '16px',
+            fill: '#f1c40f',
+            fontWeight: 'bold'
+        }).setOrigin(0.5).setVisible(false);
+
+        this.elements = [this.background, this.headerBg, this.title, this.closeButton, this.description,
+                        this.bootsCard.container, this.passiveCard.container, this.activeCard.container,
+                        this.infoBg, this.moneyText];
         
-        // Set highest depth for all elements to appear above everything
         this.elements.forEach(element => element.setDepth(3000));
     }
 
-    createUpgradeButton(x, y, upgradeType) {
+    createUpgradeCard(x, y, upgradeType) {
         const container = this.scene.add.container(x, y).setVisible(false);
         const upgrade = this.upgrades[upgradeType];
         
-        const currentTier = gameData.upgrades[upgradeType] || 0;
-        const cost = this.getUpgradeCost(upgradeType, currentTier);
+        // Card background
+        const cardBg = this.scene.add.graphics()
+            .fillStyle(0x2c3e50, 1)
+            .fillRoundedRect(-80, -90, 160, 180, 10)
+            .lineStyle(2, 0x34495e, 1)
+            .strokeRoundedRect(-80, -90, 160, 180, 10);
         
-        let text;
-        if (currentTier >= upgrade.maxTier) {
-            text = `${upgrade.name} (MAX)\n${upgrade.description}`;
-        } else {
-            text = `${upgrade.name} (Tier ${currentTier}/${upgrade.maxTier})\n${upgrade.description}\nCost: $${cost}`;
-        }
-
-        const button = this.scene.add.text(0, 0, text, {
-            fontSize: '14px',
+        // Icon placeholder
+        const iconBg = this.scene.add.graphics()
+            .fillStyle(0x34495e, 1)
+            .fillRoundedRect(-60, -80, 120, 60, 5)
+            .lineStyle(1, 0x7f8c8d, 1)
+            .strokeRoundedRect(-60, -80, 120, 60, 5);
+        
+        const iconText = this.scene.add.text(0, -50, this.getUpgradeIcon(upgradeType), {
+            fontSize: '24px'
+        }).setOrigin(0.5);
+        
+        // Upgrade name
+        const nameText = this.scene.add.text(0, -15, upgrade.name, {
+            fontSize: '10px',
             fill: '#ffffff',
-            backgroundColor: '#444444',
-            padding: { x: 20, y: 12 },
-            align: 'center'
-        }).setOrigin(0.5).setInteractive();
-
-        button.on('pointerdown', () => this.buyUpgrade(upgradeType));
+            fontWeight: 'bold',
+            align: 'center',
+            wordWrap: { width: 140 }
+        }).setOrigin(0.5);
         
-        container.add(button);
-        return { container, button, upgradeType };
+        // Description
+        const descText = this.scene.add.text(0, 0, upgrade.description, {
+            fontSize: '10px',
+            fill: '#cccccc',
+            align: 'center',
+            wordWrap: { width: 130 }
+        }).setOrigin(0.5);
+        
+        // Tier progress bar
+        const progressBar = this.scene.add.graphics();
+        
+        // Current tier display
+        const tierText = this.scene.add.text(0, 25, '', {
+            fontSize: '10px',
+            fill: '#4ecdc4',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Buy button
+        const buyButton = this.scene.add.graphics();
+        
+        const buttonText = this.scene.add.text(0, 60, '', {
+            fontSize: '10px',
+            fill: '#ffffff',
+            fontWeight: 'bold',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        container.add([cardBg, iconBg, iconText, nameText, descText, progressBar, tierText, buyButton, buttonText]);
+        
+        return { container, upgradeType, buyButton, buttonText, nameText, tierText, progressBar };
     }
 
     getUpgradeCost(upgradeType, currentTier) {
@@ -149,25 +206,63 @@ class Upgrades {
         }
     }
 
-    updateButtons() {
-        this.updateButton(this.bootsButton, 'boots');
-        this.updateButton(this.passiveButton, 'passiveIncome');
-        this.updateButton(this.activeButton, 'activeIncome');
+    getUpgradeIcon(upgradeType) {
+        const icons = {
+            boots: '👟',
+            passiveIncome: '💰',
+            activeIncome: '💬'
+        };
+        return icons[upgradeType] || '⚙️';
     }
 
-    updateButton(buttonObj, upgradeType) {
+    updateCards() {
+        this.updateCard(this.bootsCard, 'boots');
+        this.updateCard(this.passiveCard, 'passiveIncome');
+        this.updateCard(this.activeCard, 'activeIncome');
+        this.updateMoneyDisplay();
+    }
+
+    updateCard(card, upgradeType) {
         const upgrade = this.upgrades[upgradeType];
         const currentTier = gameData.upgrades[upgradeType] || 0;
         const cost = this.getUpgradeCost(upgradeType, currentTier);
+        const canBuy = currentTier < upgrade.maxTier;
         
-        let text;
-        if (currentTier >= upgrade.maxTier) {
-            text = `${upgrade.name} (MAX)\n${upgrade.description}`;
+        // Update progress bar
+        card.progressBar.clear()
+            .fillStyle(0x34495e, 1)
+            .fillRoundedRect(-60, 15, 120, 6, 3)
+            .fillStyle(0x3498db, 1)
+            .fillRoundedRect(-60, 15, (120 * currentTier) / upgrade.maxTier, 6, 3);
+        
+        // Update tier text
+        card.tierText.setText(`Tier ${currentTier}/${upgrade.maxTier}`);
+        
+        // Update button
+        card.buyButton.clear();
+        if (canBuy) {
+            card.buyButton
+                .fillStyle(0x27ae60, 1)
+                .fillRoundedRect(-60, 45, 120, 30, 5)
+                .lineStyle(1, 0x2ecc71, 1)
+                .strokeRoundedRect(-60, 45, 120, 30, 5)
+                .setInteractive(new Phaser.Geom.Rectangle(-60, 45, 120, 30), Phaser.Geom.Rectangle.Contains);
+            
+            card.buyButton.off('pointerdown').on('pointerdown', () => this.buyUpgrade(upgradeType));
+            card.buttonText.setText(`$${cost}`);
         } else {
-            text = `${upgrade.name} (Tier ${currentTier}/${upgrade.maxTier})\n${upgrade.description}\nCost: $${cost}`;
+            card.buyButton
+                .fillStyle(0x7f8c8d, 1)
+                .fillRoundedRect(-60, 45, 120, 30, 5)
+                .lineStyle(1, 0x95a5a6, 1)
+                .strokeRoundedRect(-60, 45, 120, 30, 5);
+            
+            card.buttonText.setText('MAXED');
         }
-        
-        buttonObj.button.setText(text);
+    }
+
+    updateMoneyDisplay() {
+        this.moneyText.setText(`💰 ${gameData.money} COINS`);
     }
 
     showPurchaseMessage(message, color = '#00ff00') {
@@ -191,26 +286,38 @@ class Upgrades {
 
     open() {
         this.isOpen = true;
-        this.updateButtons();
+        this.updateCards();
         this.elements.forEach(element => {
             element.setVisible(true);
             element.setDepth(3000);
         });
         this.scene.physics.pause();
         
-        // Save when opening upgrades
+        // Start real-time updates
+        this.updateInterval = setInterval(() => {
+            if (this.isOpen) {
+                this.updateMoneyDisplay();
+            }
+        }, 100);
+        
         if (gameData?.save) gameData.save();
     }
 
     close() {
         this.isOpen = false;
+        
+        // Stop real-time updates
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+        
         this.elements.forEach(element => element.setVisible(false));
         if (this.purchaseMessage) {
             this.purchaseMessage.destroy();
         }
         this.scene.physics.resume();
         
-        // Add extended cooldown to all buildings after closing
         this.addCloseCooldown();
     }
 

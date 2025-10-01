@@ -46,103 +46,129 @@ class Decorations {
     }
 
     createInterface() {
-        // Background panel
+        // Main background with rounded corners
         this.background = this.scene.add.graphics()
-            .fillStyle(0x000000, 0.9)
-            .fillRect(100, 80, 600, 440)
+            .fillStyle(0x1a1a1a, 0.95)
+            .fillRoundedRect(100, 80, 600, 440, 15)
+            .lineStyle(2, 0x444444, 1)
+            .strokeRoundedRect(100, 80, 600, 440, 15)
+            .setVisible(false);
+        
+        // Header section
+        this.headerBg = this.scene.add.graphics()
+            .fillStyle(0x2c3e50, 1)
+            .fillRoundedRect(100, 80, 600, 60, 15)
             .setVisible(false);
         
         // Title
-        this.title = this.scene.add.text(400, 110, 'DECORATIONS', {
-            fontSize: '24px',
+        this.title = this.scene.add.text(400, 110, 'DECORATION SHOP', {
+            fontSize: '22px',
             fill: '#ffffff',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
+        // Close button
+        this.closeButton = this.scene.add.text(670, 110, '✕', {
+            fontSize: '18px',
+            fill: '#ff6b6b',
+            backgroundColor: '#333333',
+            padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setVisible(false).setInteractive();
+        this.closeButton.on('pointerdown', () => this.close());
+
         // Description
-        this.description = this.scene.add.text(400, 140, 'Unlock and place decorative items by completing achievements', {
+        this.description = this.scene.add.text(400, 160, 'Unlock and place decorative items by completing achievements', {
             fontSize: '14px',
             fill: '#cccccc',
             align: 'center'
         }).setOrigin(0.5).setVisible(false);
 
-        // Close button
-        this.closeButton = this.scene.add.text(670, 90, 'X', {
-            fontSize: '20px',
-            fill: '#ff0000',
-            backgroundColor: '#333333',
-            padding: { x: 8, y: 4 }
-        }).setOrigin(0.5).setVisible(false).setInteractive();
-        this.closeButton.on('pointerdown', () => this.close());
+        // Decoration cards
+        this.tableCard = this.createDecorationCard(200, 260, 'table');
+        this.plantCard = this.createDecorationCard(320, 260, 'plant');
+        this.trophyCard = this.createDecorationCard(440, 260, 'trophy');
+        this.fountainCard = this.createDecorationCard(560, 260, 'fountain');
 
-        // Decoration buttons
-        this.tableButton = this.createDecorationButton(250, 200, 'table');
-        this.plantButton = this.createDecorationButton(400, 200, 'plant');
-        this.trophyButton = this.createDecorationButton(550, 200, 'trophy');
+        // Bottom info section
+        this.infoBg = this.scene.add.graphics()
+            .fillStyle(0x34495e, 1)
+            .fillRoundedRect(120, 420, 560, 80, 10)
+            .setVisible(false);
 
-        // Inventory section
-        this.inventoryTitle = this.scene.add.text(400, 320, 'INVENTORY', {
+        // Money display
+        this.moneyText = this.scene.add.text(400, 440, '', {
             fontSize: '16px',
-            fill: '#ffffff',
+            fill: '#f1c40f',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
-        this.inventoryContainer = this.scene.add.container(400, 360).setVisible(false);
-
         // Instructions
-        this.instructionsText = this.scene.add.text(400, 450, 
-            'Buy items above • Click inventory items to place • Right-click placed items to move', {
+        this.instructionsText = this.scene.add.text(400, 470, 
+            'Complete achievements to unlock \u2022 Purchase to add to inventory \u2022 Use inventory to place', {
             fontSize: '11px',
-            fill: '#cccccc'
+            fill: '#cccccc',
+            align: 'center',
+            wordWrap: { width: 540 }
         }).setOrigin(0.5).setVisible(false);
 
-        this.elements = [this.background, this.title, this.closeButton, 
-                        this.tableButton.container, this.plantButton.container, this.trophyButton.container,
-                        this.inventoryTitle, this.inventoryContainer, this.instructionsText];
+        this.elements = [this.background, this.headerBg, this.title, this.closeButton, this.description,
+                        this.tableCard.container, this.plantCard.container, this.trophyCard.container, this.fountainCard.container,
+                        this.infoBg, this.moneyText, this.instructionsText];
     }
 
-    createDecorationButton(x, y, itemType) {
+    createDecorationCard(x, y, itemType) {
         const container = this.scene.add.container(x, y).setVisible(false);
         const item = this.decorationItems[itemType];
         
-        let statusText = '';
-        let buttonColor = '#444444';
-        let canUse = false;
-
-        // Check unlock status
-        const isUnlocked = achievements.isDecorationUnlocked(itemType);
+        // Card background
+        const cardBg = this.scene.add.graphics()
+            .fillStyle(0x2c3e50, 1)
+            .fillRoundedRect(-60, -70, 120, 140, 10)
+            .lineStyle(2, 0x34495e, 1)
+            .strokeRoundedRect(-60, -70, 120, 140, 10);
         
-        if (!isUnlocked) {
-            const achievement = achievements.achievements[item.achievement];
-            statusText = `${item.name}\n🔒 ${achievement.description}`;
-            buttonColor = '#666666';
-            canUse = false;
-        } else {
-            if (gameData.money >= item.cost) {
-                statusText = `${item.name}\n$${item.cost}`;
-                buttonColor = '#444444';
-                canUse = true;
-            } else {
-                statusText = `${item.name}\n$${item.cost}\nNot enough money`;
-                buttonColor = '#666666';
-                canUse = false;
-            }
-        }
-
-        const button = this.scene.add.text(0, 0, `${item.icon}\n${statusText}`, {
-            fontSize: '12px',
-            fill: canUse ? '#ffffff' : '#888888',
-            backgroundColor: buttonColor,
-            padding: { x: 15, y: 12 },
+        // Icon background
+        const iconBg = this.scene.add.graphics()
+            .fillStyle(0x34495e, 1)
+            .fillRoundedRect(-45, -60, 90, 50, 5)
+            .lineStyle(1, 0x7f8c8d, 1)
+            .strokeRoundedRect(-45, -60, 90, 50, 5);
+        
+        // Item icon
+        const iconText = this.scene.add.text(0, -35, item.icon, {
+            fontSize: '24px'
+        }).setOrigin(0.5);
+        
+        // Item name
+        const nameText = this.scene.add.text(0, -5, item.name, {
+            fontSize: '10px',
+            fill: '#ffffff',
+            fontWeight: 'bold',
+            align: 'center',
+            wordWrap: { width: 110 }
+        }).setOrigin(0.5);
+        
+        // Status/price text
+        const statusText = this.scene.add.text(0, 20, '', {
+            fontSize: '10px',
+            fill: '#cccccc',
+            align: 'center',
+            wordWrap: { width: 110 }
+        }).setOrigin(0.5);
+        
+        // Buy button
+        const buyButton = this.scene.add.graphics();
+        
+        const buttonText = this.scene.add.text(0, 50, '', {
+            fontSize: '10px',
+            fill: '#ffffff',
+            fontWeight: 'bold',
             align: 'center'
-        }).setOrigin(0.5).setInteractive();
-
-        if (canUse) {
-            button.on('pointerdown', () => this.selectDecoration(itemType));
-        }
+        }).setOrigin(0.5);
         
-        container.add(button);
-        return { container, button, itemType };
+        container.add([cardBg, iconBg, iconText, nameText, statusText, buyButton, buttonText]);
+        
+        return { container, itemType, buyButton, buttonText, statusText };
     }
 
     selectDecoration(itemType) {
@@ -348,29 +374,61 @@ class Decorations {
         });
     }
 
-    updateButtons() {
-        // Recreate buttons with updated status
-        if (this.tableButton && this.tableButton.container) {
-            this.tableButton.container.destroy();
-        }
-        if (this.plantButton && this.plantButton.container) {
-            this.plantButton.container.destroy();
-        }
-        if (this.trophyButton && this.trophyButton.container) {
-            this.trophyButton.container.destroy();
+    updateCards() {
+        this.updateCard(this.tableCard, 'table');
+        this.updateCard(this.plantCard, 'plant');
+        this.updateCard(this.trophyCard, 'trophy');
+        this.updateCard(this.fountainCard, 'fountain');
+        this.updateMoneyDisplay();
+    }
+
+    updateCard(card, itemType) {
+        const item = this.decorationItems[itemType];
+        const isUnlocked = achievements.isDecorationUnlocked(itemType);
+        const canAfford = gameData.money >= item.cost;
+        const canBuy = isUnlocked && canAfford;
+        
+        // Update status text
+        if (!isUnlocked) {
+            const achievement = achievements.achievements[item.achievement];
+            card.statusText.setText(`🔒 ${achievement.description}`);
+        } else {
+            card.statusText.setText(`Cost: $${item.cost}`);
         }
         
-        this.tableButton = this.createDecorationButton(250, 200, 'table');
-        this.plantButton = this.createDecorationButton(400, 200, 'plant');
-        this.trophyButton = this.createDecorationButton(550, 200, 'trophy');
-        
-        // Update inventory display
-        this.updateInventoryDisplay();
-        
-        // Update elements array
-        this.elements = [this.background, this.title, this.description, this.closeButton, 
-                        this.tableButton.container, this.plantButton.container, this.trophyButton.container,
-                        this.inventoryTitle, this.inventoryContainer, this.instructionsText];
+        // Update button
+        card.buyButton.clear();
+        if (canBuy) {
+            card.buyButton
+                .fillStyle(0x27ae60, 1)
+                .fillRoundedRect(-50, 35, 100, 25, 5)
+                .lineStyle(1, 0x2ecc71, 1)
+                .strokeRoundedRect(-50, 35, 100, 25, 5)
+                .setInteractive(new Phaser.Geom.Rectangle(-50, 35, 100, 25), Phaser.Geom.Rectangle.Contains);
+            
+            card.buyButton.off('pointerdown').on('pointerdown', () => this.selectDecoration(itemType));
+            card.buttonText.setText('BUY').setStyle({ fill: '#ffffff' });
+        } else if (isUnlocked) {
+            card.buyButton
+                .fillStyle(0x7f8c8d, 1)
+                .fillRoundedRect(-50, 35, 100, 25, 5)
+                .lineStyle(1, 0x95a5a6, 1)
+                .strokeRoundedRect(-50, 35, 100, 25, 5);
+            
+            card.buttonText.setText('NO MONEY').setStyle({ fill: '#cccccc' });
+        } else {
+            card.buyButton
+                .fillStyle(0x555555, 1)
+                .fillRoundedRect(-50, 35, 100, 25, 5)
+                .lineStyle(1, 0x777777, 1)
+                .strokeRoundedRect(-50, 35, 100, 25, 5);
+            
+            card.buttonText.setText('LOCKED').setStyle({ fill: '#888888' });
+        }
+    }
+
+    updateMoneyDisplay() {
+        this.moneyText.setText(`💰 ${gameData.money} COINS`);
     }
 
     updateInventoryDisplay() {
@@ -421,24 +479,36 @@ class Decorations {
 
     open() {
         this.isOpen = true;
-        this.updateButtons();
+        this.updateCards();
         this.elements.forEach(element => {
             element.setVisible(true);
             element.setDepth(3000);
         });
         this.scene.physics.pause();
         
-        // Save when opening decorations
+        // Start real-time updates
+        this.updateInterval = setInterval(() => {
+            if (this.isOpen) {
+                this.updateMoneyDisplay();
+            }
+        }, 100);
+        
         if (gameData?.save) gameData.save();
     }
 
     close() {
         this.isOpen = false;
+        
+        // Stop real-time updates
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+        
         this.elements.forEach(element => element.setVisible(false));
         if (this.message) this.message.destroy();
         this.scene.physics.resume();
         
-        // Add cooldown to prevent immediate reopening
         this.addCloseCooldown();
     }
 

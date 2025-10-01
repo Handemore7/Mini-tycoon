@@ -11,27 +11,70 @@ class WebSocketManager {
         if (!serverUrl) {
             serverUrl = window.location.hostname === 'localhost' 
                 ? 'http://localhost:3001'
-                : 'https://your-websocket-server.herokuapp.com'; // Replace with your server URL
+                : 'https://mini-tycoon-production.up.railway.app'; // Your Railway WebSocket server
         }
         try {
             // Using Socket.IO client
             this.socket = io(serverUrl);
+            console.log('🔌 WebSocket: Attempting connection to', serverUrl);
             
             this.socket.on('connect', () => {
                 this.connected = true;
+                console.log('✅ WebSocket: Connected to server', this.socket.id);
                 this.showNotification('🌐 Conectado al servidor', 'success');
+                
+                // Request active events on every connection/reconnection
+                console.log('📫 WebSocket: Requesting active events on connect');
+                this.socket.emit('request_active_events');
             });
 
             this.socket.on('disconnect', () => {
                 this.connected = false;
+                console.log('❌ WebSocket: Disconnected from server');
                 this.showNotification('❌ Desconectado del servidor', 'warning');
             });
+            
+            this.socket.on('connect_error', (error) => {
+                console.error('❌ WebSocket: Connection error', error);
+            });
+            
+            this.socket.on('reconnect', (attemptNumber) => {
+                console.log('🔄 WebSocket: Reconnected after', attemptNumber, 'attempts');
+            });
+            
+            this.socket.on('reconnect_attempt', (attemptNumber) => {
+                console.log('🔄 WebSocket: Reconnection attempt', attemptNumber);
+            });
 
-            // Event listeners
-            this.socket.on('server_vote', (data) => this.handleServerVote(data));
-            this.socket.on('coin_rain', (data) => this.handleCoinRain(data));
-            this.socket.on('critical_madness', (data) => this.handleCriticalMadness(data));
-            this.socket.on('speed_challenge', (data) => this.handleSpeedChallenge(data));
+            // Event listeners with logging
+            this.socket.on('server_vote', (data) => {
+                console.log('🗳️ WebSocket: Received server_vote', data);
+                this.handleServerVote(data);
+            });
+            this.socket.on('coin_rain', (data) => {
+                console.log('🌧️ WebSocket: Received coin_rain', data);
+                this.handleCoinRain(data);
+            });
+            this.socket.on('critical_madness', (data) => {
+                console.log('⚡ WebSocket: Received critical_madness', data);
+                this.handleCriticalMadness(data);
+            });
+            this.socket.on('speed_challenge', (data) => {
+                console.log('🏃 WebSocket: Received speed_challenge', data);
+                this.handleSpeedChallenge(data);
+            });
+            
+            // Global event state listeners
+            this.socket.on('active_events', (events) => {
+                console.log('🌐 WebSocket: Received active_events', events);
+                this.handleActiveEvents(events);
+            });
+            this.socket.on('vote_update', (data) => {
+                console.log('📊 WebSocket: Received vote_update', data);
+                this.handleGlobalVoteUpdate(data);
+            });
+            
+            // Active events will be requested in connect handler
             
         } catch (error) {
             console.error('WebSocket connection failed:', error);
@@ -42,9 +85,47 @@ class WebSocketManager {
         // Event handlers setup
     }
 
+    // GLOBAL EVENT STATE HANDLER
+    handleActiveEvents(events) {
+        console.log('🔍 WebSocket: Processing', events.length, 'active events');
+        
+        events.forEach(event => {
+            const timeLeft = event.endTime - Date.now();
+            console.log(`⏱️ WebSocket: Event ${event.type} has ${Math.ceil(timeLeft/1000)}s remaining`);
+            
+            // Only show events with at least 5 seconds left
+            if (timeLeft >= 5000) {
+                console.log(`✅ WebSocket: Showing event ${event.type} to late joiner`);
+                switch (event.type) {
+                    case 'server_vote':
+                        this.handleServerVote({...event, duration: timeLeft});
+                        break;
+                    case 'coin_rain':
+                        this.handleCoinRain({...event, duration: timeLeft});
+                        break;
+                    case 'critical_madness':
+                        this.handleCriticalMadness({...event, duration: timeLeft});
+                        break;
+                    case 'speed_challenge':
+                        this.handleSpeedChallenge({...event, duration: timeLeft});
+                        break;
+                }
+            } else {
+                console.log(`❌ WebSocket: Skipping event ${event.type} (less than 5s remaining)`);
+            }
+        });
+    }
+    
+    // GLOBAL VOTE UPDATE HANDLER
+    handleGlobalVoteUpdate(data) {
+        const { eventId, results } = data;
+        console.log(`📊 WebSocket: Updating vote results for ${eventId}:`, results);
+        this.updateVoteResults(results);
+    }
+
     // SERVER VOTE EVENT
     handleServerVote(data) {
-        const { eventId, question, options, duration = 20000 } = data;
+        const { eventId, question, options, duration = 20000, results = [] } = data;
         
         this.createEventNotification(
             eventId,
@@ -53,10 +134,10 @@ class WebSocketManager {
             duration,
             'vote'
         );
-        this.createVoteUI(eventId, question, options, duration);
+        this.createVoteUI(eventId, question, options, duration, results);
     }
 
-    createVoteUI(eventId, question, options, duration) {
+    createVoteUI(eventId, question, options, duration, initialResults = []) {
         const voteContainer = document.createElement('div');
         voteContainer.id = 'vote-container';
         voteContainer.innerHTML = `
@@ -66,11 +147,11 @@ class WebSocketManager {
                 <div class="vote-options">
                     ${options.map((option, index) => `
                         <button class="vote-btn" data-option="${index}">
-                            ${option.name} <span class="vote-count">(0)</span>
+                            ${option.name} <span class="vote-count">(${initialResults[index] || 0})</span>
                         </button>
                     `).join('')}
                 </div>
-                <div class="vote-timer">Tiempo restante: <span id="vote-countdown">20</span>s</div>
+                <div class="vote-timer">Tiempo restante: <span id="vote-countdown">${Math.ceil(duration / 1000)}</span>s</div>
             </div>
         `;
         
@@ -86,24 +167,22 @@ class WebSocketManager {
         });
 
         // Countdown timer
-        let timeLeft = duration / 1000;
+        let timeLeft = Math.ceil(duration / 1000);
         const countdown = setInterval(() => {
             timeLeft--;
-            document.getElementById('vote-countdown').textContent = timeLeft;
+            const countdownEl = document.getElementById('vote-countdown');
+            if (countdownEl) countdownEl.textContent = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(countdown);
                 this.closeVoteUI();
             }
         }, 1000);
-
-        // Listen for vote updates
-        this.socket.on(`vote_update_${eventId}`, (results) => {
-            this.updateVoteResults(results);
-        });
     }
 
     submitVote(eventId, optionIndex) {
-        this.socket.emit('submit_vote', { eventId, option: optionIndex, playerId: gameData.playerName });
+        const voteData = { eventId, option: optionIndex, playerId: gameData.playerName };
+        console.log('📫 WebSocket: Submitting vote', voteData);
+        this.socket.emit('submit_vote', voteData);
     }
 
     updateVoteResults(results) {
@@ -120,16 +199,21 @@ class WebSocketManager {
 
     // COIN RAIN EVENT
     handleCoinRain(data) {
-        const { eventId, duration = 10000, coinValue = 50 } = data;
+        const { eventId, duration = 10000, coinValue = 50, startTime } = data;
         
-        this.createEventNotification(
-            eventId,
-            '🌧️ Lluvia de Monedas',
-            `¡Recoge las monedas doradas! +${coinValue} monedas cada una`,
-            duration,
-            'coin-rain'
-        );
-        this.startCoinRain(eventId, duration, coinValue);
+        // Calculate remaining duration if event already started
+        const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;
+        
+        if (actualDuration >= 5000) {
+            this.createEventNotification(
+                eventId,
+                '🌧️ Lluvia de Monedas',
+                `¡Recoge las monedas doradas! +${coinValue} monedas cada una`,
+                actualDuration,
+                'coin-rain'
+            );
+            this.startCoinRain(eventId, actualDuration, coinValue);
+        }
     }
 
     startCoinRain(eventId, duration, coinValue) {
@@ -191,16 +275,21 @@ class WebSocketManager {
 
     // CRITICAL MADNESS EVENT
     handleCriticalMadness(data) {
-        const { eventId, duration = 300000 } = data; // 5 minutes
+        const { eventId, duration = 300000, startTime } = data; // 5 minutes
         
-        this.createEventNotification(
-            eventId,
-            '⚡ Critical Madness',
-            'Entra al arena para obtener 100% probabilidad crítica',
-            duration,
-            'critical'
-        );
-        this.startCriticalMadness(eventId, duration);
+        // Calculate remaining duration if event already started
+        const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;
+        
+        if (actualDuration >= 5000) {
+            this.createEventNotification(
+                eventId,
+                '⚡ Critical Madness',
+                'Entra al arena para obtener 100% probabilidad crítica',
+                actualDuration,
+                'critical'
+            );
+            this.startCriticalMadness(eventId, actualDuration);
+        }
     }
 
     startCriticalMadness(eventId, duration) {
@@ -218,16 +307,21 @@ class WebSocketManager {
 
     // SPEED CHALLENGE EVENT
     handleSpeedChallenge(data) {
-        const { eventId, duration = 180000, speedMultiplier = 2 } = data; // 3 minutes
+        const { eventId, duration = 180000, speedMultiplier = 2, startTime } = data; // 3 minutes
         
-        this.createEventNotification(
-            eventId,
-            '🏃 Speed Challenge',
-            `Velocidad aumentada x${speedMultiplier}. ¡Muévete más rápido!`,
-            duration,
-            'speed'
-        );
-        this.startSpeedChallenge(eventId, duration, speedMultiplier);
+        // Calculate remaining duration if event already started
+        const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;
+        
+        if (actualDuration >= 5000) {
+            this.createEventNotification(
+                eventId,
+                '🏃 Speed Challenge',
+                `Velocidad aumentada x${speedMultiplier}. ¡Muévete más rápido!`,
+                actualDuration,
+                'speed'
+            );
+            this.startSpeedChallenge(eventId, actualDuration, speedMultiplier);
+        }
     }
 
     startSpeedChallenge(eventId, duration, speedMultiplier) {
