@@ -1,0 +1,223 @@
+/* WebSocket Events Styling */
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification.success { background: #4CAF50; }
+.notification.warning { background: #FF9800; }
+.notification.info { background: #2196F3; }
+.notification.special { background: #9C27B0; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Vote UI */
+.vote-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #FFD700;
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    z-index: 9999;
+    min-width: 300px;
+}
+
+.vote-popup h3 {
+    margin: 0 0 15px 0;
+    color: #FFD700;
+}
+
+.vote-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.vote-btn {
+    padding: 10px 15px;
+    background: #333;
+    border: 1px solid #666;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.vote-btn:hover {
+    background: #555;
+    border-color: #FFD700;
+}
+
+.vote-btn.voted {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.vote-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.vote-count {
+    color: #FFD700;
+    font-weight: bold;
+}
+
+.vote-timer {
+    margin-top: 15px;
+    color: #FF6666;
+    font-weight: bold;
+}
+
+/* Event Notifications */
+.event-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #FFD700;
+    border-radius: 12px;
+    padding: 15px 20px;
+    color: white;
+    z-index: 9999;
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+.event-notification.hidden {
+    transform: translateX(-50%) translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.event-notification.vote { border-color: #2196F3; }
+.event-notification.coin-rain { border-color: #FFD700; }
+.event-notification.critical { border-color: #FF6B6B; }
+.event-notification.speed { border-color: #4ECDC4; }
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.event-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #FFD700;
+}
+
+.hide-btn {
+    background: none;
+    border: 1px solid #666;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.hide-btn:hover {
+    background: #333;
+    border-color: #FFD700;
+}
+
+.event-content p {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #4CAF50, #FFD700);
+    transition: width 1s linear;
+}
+
+.time-left {
+    font-size: 12px;
+    color: #FFD700;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: right;
+}
+
+/* Minimized Arrow */
+.event-arrow {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #FFD700;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFD700;
+    cursor: pointer;
+    z-index: 9998;
+    font-size: 12px;
+    transition: all 0.2s;
+    animation: bounce 2s infinite;
+}
+
+.event-arrow:hover {
+    background: rgba(0, 0, 0, 1);
+    transform: translateX(-50%) scale(1.1);
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+    40% { transform: translateX(-50%) translateY(-5px); }
+    60% { transform: translateX(-50%) translateY(-3px); }
+}

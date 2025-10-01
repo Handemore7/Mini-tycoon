@@ -21,6 +21,13 @@ class GameScene extends Phaser.Scene {
             }
         });
         
+        // Load sword and shield images
+        const tiers = ['wood', 'stone', 'gold', 'iron', 'diamond'];
+        tiers.forEach(tier => {
+            this.load.image(`sword_${tier}`, `assets/swords/${tier}.png`);
+            this.load.image(`shield_${tier}`, `assets/shields/${tier}.png`);
+        });
+        
         // Load other assets
         this.load.image('background', 'assets/sprites/background.png');
         this.load.image('store_building', 'assets/sprites/buildings/store.png');
@@ -329,6 +336,9 @@ class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.decorationBuilding);
         this.physics.add.collider(this.player, this.fightsBuilding);
         
+        // Require player movement before enabling interactions
+        this.playerHasMoved = false;
+        
         // Touch interaction zones (smaller overlap areas)
         this.createInteractionZone(this.storeBuilding);
         this.createInteractionZone(this.upgradesBuilding);
@@ -396,6 +406,10 @@ class GameScene extends Phaser.Scene {
                 }
             });
         }
+        
+        // Initialize tutorial for new players
+        this.tutorial = new Tutorial(this);
+        this.tutorial.start();
     }
 
     createInteractionZone(building) {
@@ -406,8 +420,8 @@ class GameScene extends Phaser.Scene {
         
         // Add overlap detection for interaction
         this.physics.add.overlap(this.player, zone, () => {
-            // Don't open if any store is already open or building is on cooldown
-            if (!building.interactionCooldown && !this.isAnyStoreOpen()) {
+            // Only interact if player has moved, no store is open, and building not on cooldown
+            if (this.playerHasMoved && !building.interactionCooldown && !this.isAnyStoreOpen()) {
                 building.interact(this);
                 building.interactionCooldown = true;
                 this.time.delayedCall(1000, () => {
@@ -434,6 +448,12 @@ class GameScene extends Phaser.Scene {
             }
         } catch (error) {
             window.errorLogger?.error('Update loop error:', error);
+        }
+    }
+    
+    toggleInventory() {
+        if (this.inventory) {
+            this.inventory.toggle();
         }
     }
     

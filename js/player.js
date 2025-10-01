@@ -73,6 +73,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         }
         
         if (isMoving) {
+            // Mark that player has moved (enables building interactions)
+            if (!this.scene.playerHasMoved) {
+                this.scene.playerHasMoved = true;
+            }
+            
             if (this.scene.anims.exists(`walk_${this.currentDirection}`)) {
                 this.play(`walk_${this.currentDirection}`, true);
             } else {

@@ -100,9 +100,61 @@ class Inventory {
         let icon, clickHandler;
         
         if (itemType === 'sword') {
+            // Use actual sword image if available
+            const swordTiers = ['wood', 'stone', 'gold', 'iron', 'diamond'];
+            const tierIndex = Math.min(count - 1, 4);
+            const tierName = swordTiers[tierIndex];
+            
+            if (this.scene.textures.exists(`sword_${tierName}`)) {
+                const swordImage = this.scene.add.image(0, -6, `sword_${tierName}`)
+                    .setDisplaySize(20, 16)
+                    .setOrigin(0.5)
+                    .setInteractive();
+                swordImage.on('pointerdown', () => this.handleEquipmentClick('sword'));
+                
+                const container = this.scene.add.container(slot.x, slot.y).setDepth(1600);
+                container.add(swordImage);
+                
+                // Tier text
+                const tierText = this.scene.add.text(0, 8, `T${count}`, {
+                    fontSize: '8px',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                container.add(tierText);
+                
+                slot.content = container;
+                return;
+            }
+            
             icon = '⚔️';
             clickHandler = () => this.handleEquipmentClick('sword');
         } else if (itemType === 'shield') {
+            // Use actual shield image if available
+            const shieldTiers = ['wood', 'stone', 'gold', 'iron', 'diamond'];
+            const tierIndex = Math.min(count - 1, 4);
+            const tierName = shieldTiers[tierIndex];
+            
+            if (this.scene.textures.exists(`shield_${tierName}`)) {
+                const shieldImage = this.scene.add.image(0, -6, `shield_${tierName}`)
+                    .setDisplaySize(20, 16)
+                    .setOrigin(0.5)
+                    .setInteractive();
+                shieldImage.on('pointerdown', () => this.handleEquipmentClick('shield'));
+                
+                const container = this.scene.add.container(slot.x, slot.y).setDepth(1600);
+                container.add(shieldImage);
+                
+                // Tier text
+                const tierText = this.scene.add.text(0, 8, `T${count}`, {
+                    fontSize: '8px',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                container.add(tierText);
+                
+                slot.content = container;
+                return;
+            }
+            
             icon = '🛡️';
             clickHandler = () => this.handleEquipmentClick('shield');
         } else if (itemType === 'potion') {

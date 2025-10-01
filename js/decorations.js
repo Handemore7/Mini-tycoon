@@ -59,6 +59,13 @@ class Decorations {
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
+        // Description
+        this.description = this.scene.add.text(400, 140, 'Unlock and place decorative items by completing achievements', {
+            fontSize: '14px',
+            fill: '#cccccc',
+            align: 'center'
+        }).setOrigin(0.5).setVisible(false);
+
         // Close button
         this.closeButton = this.scene.add.text(670, 90, 'X', {
             fontSize: '20px',
@@ -361,7 +368,7 @@ class Decorations {
         this.updateInventoryDisplay();
         
         // Update elements array
-        this.elements = [this.background, this.title, this.closeButton, 
+        this.elements = [this.background, this.title, this.description, this.closeButton, 
                         this.tableButton.container, this.plantButton.container, this.trophyButton.container,
                         this.inventoryTitle, this.inventoryContainer, this.instructionsText];
     }
@@ -417,7 +424,7 @@ class Decorations {
         this.updateButtons();
         this.elements.forEach(element => {
             element.setVisible(true);
-            element.setDepth(2000);
+            element.setDepth(3000);
         });
         this.scene.physics.pause();
         

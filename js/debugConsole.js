@@ -2,6 +2,7 @@ class DebugConsole {
     constructor(scene) {
         this.scene = scene;
         this.isOpen = false;
+        this.elements = []; // Initialize elements array first
         this.createConsole();
         this.createDebugButtons();
     }
@@ -12,21 +13,22 @@ class DebugConsole {
             .fillRect(50, 50, 700, 500)
             .lineStyle(2, 0x00ff00, 1)
             .strokeRect(50, 50, 700, 500)
-            .setVisible(false);
+            .setVisible(false)
+            .setDepth(2000);
 
         this.consoleTitle = this.scene.add.text(400, 70, 'DEBUG CONSOLE', {
             fontSize: '20px',
             fill: '#00ff00',
             fontWeight: 'bold'
-        }).setOrigin(0.5).setVisible(false);
+        }).setOrigin(0.5).setVisible(false).setDepth(2001);
 
         this.instructions = this.scene.add.text(60, 100, 
             'Click buttons or use browser console commands:', {
             fontSize: '12px',
             fill: '#ffffff'
-        }).setVisible(false);
+        }).setVisible(false).setDepth(2001);
 
-        this.commandsText = this.scene.add.text(60, 350, 
+        this.commandsText = this.scene.add.text(60, 380, 
             'CONSOLE COMMANDS (F12 → Console):\n' +
             'gameData.money = 999999          // Set money\n' +
             'gameData.stats.health = 100      // Set health\n' +
@@ -38,9 +40,19 @@ class DebugConsole {
             fontSize: '11px',
             fill: '#cccccc',
             fontFamily: 'monospace'
-        }).setVisible(false);
+        }).setVisible(false).setDepth(2001);
 
-        this.elements = [this.consoleBackground, this.consoleTitle, this.instructions, this.commandsText];
+        this.websocketText = this.scene.add.text(60, 330, 
+            'WEBSOCKET EVENTS:', {
+            fontSize: '12px',
+            fill: '#FFD700',
+            fontWeight: 'bold'
+        }).setVisible(false).setDepth(2001);
+
+        this.elements.push(this.websocketText);
+
+        // Add console elements to array
+        this.elements.push(this.consoleBackground, this.consoleTitle, this.instructions, this.commandsText);
     }
 
     createDebugButtons() {
@@ -151,6 +163,27 @@ class DebugConsole {
             this.showSystemMonitor();
         });
 
+        this.tutorialBtn = this.createButton(220, buttonY + 120, 'Restart Tutorial', () => {
+            Tutorial.restart();
+        });
+
+        // WebSocket Event Triggers
+        this.coinRainBtn = this.createButton(120, buttonY + 180, 'Coin Rain', () => {
+            this.triggerWebSocketEvent('coin_rain');
+        });
+
+        this.speedChallengeBtn = this.createButton(220, buttonY + 180, 'Speed Challenge', () => {
+            this.triggerWebSocketEvent('speed_challenge');
+        });
+
+        this.criticalMadnessBtn = this.createButton(320, buttonY + 180, 'Critical Madness', () => {
+            this.triggerWebSocketEvent('critical_madness');
+        });
+
+        this.serverVoteBtn = this.createButton(420, buttonY + 180, 'Server Vote', () => {
+            this.triggerWebSocketEvent('server_vote');
+        });
+
         this.exitBtn = this.createButton(520, buttonY + 120, 'Exit', () => {
             this.toggle();
         });
@@ -162,7 +195,7 @@ class DebugConsole {
             fill: '#000000',
             backgroundColor: '#00ff00',
             padding: { x: 8, y: 4 }
-        }).setOrigin(0.5).setVisible(false).setInteractive();
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(2001);
 
         button.on('pointerdown', callback);
         this.elements.push(button);
@@ -177,10 +210,31 @@ class DebugConsole {
             fill: '#00ff00',
             backgroundColor: '#000000',
             padding: { x: 8, y: 4 }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(2002);
 
         this.scene.time.delayedCall(2000, () => {
             if (this.debugMessage) this.debugMessage.destroy();
+        });
+    }
+
+    triggerWebSocketEvent(eventType) {
+        if (!window.webSocketManager || !window.webSocketManager.connected) {
+            this.showMessage('WebSocket not connected!');
+            return;
+        }
+
+        fetch('http://localhost:3001/trigger-event', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({type: eventType, data: {}})
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.showMessage(`${eventType} triggered!`);
+        })
+        .catch(error => {
+            console.error('Failed to trigger event:', error);
+            this.showMessage('Failed to trigger event!');
         });
     }
 

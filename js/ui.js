@@ -56,15 +56,16 @@ class UI {
             fontWeight: 'bold',
             stroke: '#000000',
             strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(this.scene.player.depth);
 
         // Health bar background
         this.healthBarBg = this.scene.add.graphics()
             .fillStyle(0x000000, 0.8)
-            .fillRect(this.scene.player.x - 25, this.scene.player.y + 25, 50, 8);
+            .fillRect(this.scene.player.x - 25, this.scene.player.y + 25, 50, 8)
+            .setDepth(this.scene.player.depth);
 
         // Health bar fill
-        this.healthBarFill = this.scene.add.graphics();
+        this.healthBarFill = this.scene.add.graphics().setDepth(this.scene.player.depth);
         this.updateHealthBar();
     }
 
@@ -237,13 +238,16 @@ class UI {
         
         // Update player name and health bar positions
         if (this.scene.player && this.playerNameText) {
-            this.playerNameText.setPosition(this.scene.player.x, this.scene.player.y - 30);
+            this.playerNameText.setPosition(this.scene.player.x, this.scene.player.y - 30)
+                .setDepth(this.scene.player.depth);
             
             // Redraw health bar background at new position
             this.healthBarBg.clear();
             this.healthBarBg.fillStyle(0x000000, 0.8)
-                .fillRect(this.scene.player.x - 25, this.scene.player.y + 25, 50, 8);
+                .fillRect(this.scene.player.x - 25, this.scene.player.y + 25, 50, 8)
+                .setDepth(this.scene.player.depth);
             
+            this.healthBarFill.setDepth(this.scene.player.depth);
             this.updateHealthBar();
         } else if (this.scene.player && !this.playerNameText) {
             this.createPlayerUI();

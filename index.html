@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Tycoon</title>
+    <link rel="stylesheet" href="websocket-events.css">
     <style>
         body {
             margin: 0;
@@ -22,6 +23,7 @@
 </head>
 <body>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="js/config.public.js"></script>
     <script src="js/errorLogger.js"></script>
     <script src="js/memoryManager.js"></script>
@@ -45,6 +47,7 @@
     <script src="js/arena/CombatLog.js"></script>
     <script src="js/arena/CombatSystem.js"></script>
     <script src="js/arena.js"></script>
+    <script src="js/tutorial.js"></script>
     <script src="js/scenes/GameScene.js"></script>
     <script src="js/scenes/SettingsScene.js"></script>
     <script src="js/debugConsole.js"></script>
@@ -52,6 +55,7 @@
     <script src="js/inventory.js"></script>
     <script src="js/testFramework.js"></script>
     <script src="js/tests/coreTests.js"></script>
+    <script src="js/websocket/WebSocketManager.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

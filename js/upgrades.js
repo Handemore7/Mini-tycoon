@@ -45,6 +45,13 @@ class Upgrades {
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
+        // Description
+        this.description = this.scene.add.text(400, 140, 'Improve your character stats with permanent upgrades', {
+            fontSize: '14px',
+            fill: '#cccccc',
+            align: 'center'
+        }).setOrigin(0.5).setVisible(false);
+
         // Close button
         this.closeButton = this.scene.add.text(670, 90, 'X', {
             fontSize: '20px',
@@ -59,11 +66,11 @@ class Upgrades {
         this.passiveButton = this.createUpgradeButton(400, 260, 'passiveIncome');
         this.activeButton = this.createUpgradeButton(400, 340, 'activeIncome');
 
-        this.elements = [this.background, this.title, this.closeButton, 
+        this.elements = [this.background, this.title, this.description, this.closeButton, 
                         this.bootsButton.container, this.passiveButton.container, this.activeButton.container];
         
         // Set highest depth for all elements to appear above everything
-        this.elements.forEach(element => element.setDepth(2000));
+        this.elements.forEach(element => element.setDepth(3000));
     }
 
     createUpgradeButton(x, y, upgradeType) {
@@ -173,7 +180,7 @@ class Upgrades {
             fill: color,
             backgroundColor: '#000000',
             padding: { x: 8, y: 4 }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(3001);
 
         this.scene.time.delayedCall(2000, () => {
             if (this.purchaseMessage) {
@@ -187,7 +194,7 @@ class Upgrades {
         this.updateButtons();
         this.elements.forEach(element => {
             element.setVisible(true);
-            element.setDepth(2000);
+            element.setDepth(3000);
         });
         this.scene.physics.pause();
         

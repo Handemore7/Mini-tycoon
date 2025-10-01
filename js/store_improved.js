@@ -62,41 +62,31 @@ class Store {
             align: 'center'
         }).setOrigin(0.5).setVisible(false);
 
-        // Item cards (moved up)
-        this.swordCard = this.createItemCard(220, 260, 'sword');
-        this.shieldCard = this.createItemCard(400, 260, 'shield');
-        this.potionCard = this.createItemCard(580, 260, 'potion');
-
-        // Bottom info section background
-        this.infoBg = this.scene.add.graphics()
-            .fillStyle(0x34495e, 1)
-            .fillRoundedRect(120, 420, 560, 80, 10)
-            .setVisible(false);
-
-        // Player stats display (moved to bottom)
-        this.statsText = this.scene.add.text(150, 440, '', {
+        // Player stats display
+        this.statsText = this.scene.add.text(130, 190, '', {
             fontSize: '12px',
             fill: '#4ecdc4',
-            fontWeight: 'bold'
+            backgroundColor: '#2c3e50',
+            padding: { x: 10, y: 8 }
         }).setVisible(false);
 
-        // Money display (moved to bottom center)
-        this.moneyText = this.scene.add.text(400, 440, '', {
+        // Money display
+        this.moneyText = this.scene.add.text(570, 190, '', {
             fontSize: '14px',
             fill: '#f1c40f',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            backgroundColor: '#2c3e50',
+            padding: { x: 10, y: 8 }
         }).setOrigin(0.5).setVisible(false);
 
-        // Inventory preview (moved to bottom right)
-        this.inventoryText = this.scene.add.text(550, 440, '', {
-            fontSize: '12px',
-            fill: '#e67e22',
-            fontWeight: 'bold'
-        }).setVisible(false);
+        // Item cards
+        this.swordCard = this.createItemCard(220, 300, 'sword');
+        this.shieldCard = this.createItemCard(400, 300, 'shield');
+        this.potionCard = this.createItemCard(580, 300, 'potion');
 
         this.elements = [this.background, this.headerBg, this.title, this.closeButton, this.description,
-                        this.swordCard.container, this.shieldCard.container, this.potionCard.container,
-                        this.infoBg, this.statsText, this.moneyText, this.inventoryText];
+                        this.statsText, this.moneyText,
+                        this.swordCard.container, this.shieldCard.container, this.potionCard.container];
         
         this.elements.forEach(element => element.setDepth(3000));
     }
@@ -111,55 +101,40 @@ class Store {
             .lineStyle(2, 0x34495e, 1)
             .strokeRoundedRect(-70, -80, 140, 160, 10);
         
-        // Item image or placeholder
-        let itemImage, itemName, priceText, canBuy = true;
+        // Image placeholder
+        const imagePlaceholder = this.scene.add.graphics()
+            .fillStyle(0x34495e, 1)
+            .fillRoundedRect(-50, -70, 100, 60, 5)
+            .lineStyle(1, 0x7f8c8d, 1)
+            .strokeRoundedRect(-50, -70, 100, 60, 5);
+        
+        let imageText, itemName, priceText, canBuy = true;
         
         if (itemType === 'potion') {
-            // Potion placeholder for now
-            const imagePlaceholder = this.scene.add.graphics()
-                .fillStyle(0x34495e, 1)
-                .fillRoundedRect(-50, -70, 100, 60, 5)
-                .lineStyle(1, 0x7f8c8d, 1)
-                .strokeRoundedRect(-50, -70, 100, 60, 5);
-            itemImage = this.scene.add.text(0, -40, 'POTION\nIMAGE', {
-                fontSize: '10px',
-                fill: '#95a5a6',
-                align: 'center'
-            }).setOrigin(0.5);
+            imageText = 'POTION\nIMAGE';
             itemName = 'Health Potion';
             priceText = `$${this.items.potion.price}`;
         } else {
             const currentTier = gameData.inventory[itemType] || 0;
             if (currentTier >= 5) {
-                // Show max tier sword
-                const tierName = this.items[itemType].tiers[4].toLowerCase().replace('wooden', 'wood');
-                if (this.scene.textures.exists(`${itemType}_${tierName}`)) {
-                    itemImage = this.scene.add.image(0, -40, `${itemType}_${tierName}`).setDisplaySize(80, 50);
-                } else {
-                    itemImage = this.scene.add.text(0, -40, `${itemType.toUpperCase()}\nIMAGE`, {
-                        fontSize: '10px',
-                        fill: '#95a5a6',
-                        align: 'center'
-                    }).setOrigin(0.5);
-                }
+                imageText = `${itemType.toUpperCase()}\nIMAGE`;
                 itemName = `${this.items[itemType].name} (MAX)`;
                 priceText = 'MAXED';
                 canBuy = false;
             } else {
-                const tierName = this.items[itemType].tiers[currentTier].toLowerCase().replace('wooden', 'wood');
-                if (this.scene.textures.exists(`${itemType}_${tierName}`)) {
-                    itemImage = this.scene.add.image(0, -40, `${itemType}_${tierName}`).setDisplaySize(80, 50);
-                } else {
-                    itemImage = this.scene.add.text(0, -40, `${tierName.toUpperCase()}\n${itemType.toUpperCase()}\nIMAGE`, {
-                        fontSize: '10px',
-                        fill: '#95a5a6',
-                        align: 'center'
-                    }).setOrigin(0.5);
-                }
-                itemName = `${this.items[itemType].tiers[currentTier]} ${this.items[itemType].name}`;
+                const tierName = this.items[itemType].tiers[currentTier];
+                imageText = `${tierName.toUpperCase()}\n${itemType.toUpperCase()}\nIMAGE`;
+                itemName = `${tierName} ${this.items[itemType].name}`;
                 priceText = `$${this.items[itemType].prices[currentTier]}`;
             }
         }
+        
+        // Image placeholder text
+        const imageLabel = this.scene.add.text(0, -40, imageText, {
+            fontSize: '10px',
+            fill: '#95a5a6',
+            align: 'center'
+        }).setOrigin(0.5);
         
         // Item name
         const nameText = this.scene.add.text(0, -5, itemName, {
@@ -169,45 +144,22 @@ class Store {
             align: 'center'
         }).setOrigin(0.5);
         
-        // Tier progress bar for equipment
-        let progressBar = null;
-        if (itemType !== 'potion') {
-            const currentTier = gameData.inventory[itemType] || 0;
-            progressBar = this.scene.add.graphics()
-                .fillStyle(0x34495e, 1)
-                .fillRoundedRect(-40, 10, 80, 6, 3)
-                .fillStyle(0x3498db, 1)
-                .fillRoundedRect(-40, 10, (80 * currentTier) / 5, 6, 3);
-        }
-        
         // Stats display for equipment
         let statsText = null;
         if (itemType !== 'potion') {
             const currentTier = gameData.inventory[itemType] || 0;
             if (currentTier < 5) {
-                const currentStat = itemType === 'sword' ? 
-                    (currentTier > 0 ? this.items.sword.damage[currentTier - 1] : 0) : 
-                    (currentTier > 0 ? this.items.shield.armor[currentTier - 1] : 0);
-                const nextStat = itemType === 'sword' ? 
+                const statValue = itemType === 'sword' ? 
                     this.items.sword.damage[currentTier] : 
                     this.items.shield.armor[currentTier];
                 const statName = itemType === 'sword' ? 'DMG' : 'ARM';
-                statsText = this.scene.add.text(0, 25, `${currentStat} → ${nextStat} ${statName}`, {
-                    fontSize: '9px',
+                statsText = this.scene.add.text(0, 15, `+${statValue} ${statName}`, {
+                    fontSize: '10px',
                     fill: '#4ecdc4'
-                }).setOrigin(0.5);
-            } else {
-                const maxStat = itemType === 'sword' ? 
-                    this.items.sword.damage[4] : 
-                    this.items.shield.armor[4];
-                const statName = itemType === 'sword' ? 'DMG' : 'ARM';
-                statsText = this.scene.add.text(0, 25, `${maxStat} ${statName} (MAX)`, {
-                    fontSize: '9px',
-                    fill: '#95a5a6'
                 }).setOrigin(0.5);
             }
         } else {
-            statsText = this.scene.add.text(0, 25, '+50 HP', {
+            statsText = this.scene.add.text(0, 15, '+50 HP', {
                 fontSize: '10px',
                 fill: '#e74c3c'
             }).setOrigin(0.5);
@@ -245,11 +197,10 @@ class Store {
             });
         }
         
-        container.add([cardBg, itemImage, nameText, buyButton, buttonText]);
-        if (progressBar) container.add(progressBar);
+        container.add([cardBg, imagePlaceholder, imageLabel, nameText, buyButton, buttonText]);
         if (statsText) container.add(statsText);
         
-        return { container, itemType, buyButton, buttonText, nameText, statsText, itemImage, progressBar };
+        return { container, itemType, buyButton, buttonText, nameText, statsText, imageLabel };
     }
 
     buyItem(itemType) {
@@ -258,7 +209,6 @@ class Store {
                 gameData.healthPotions = (gameData.healthPotions || 0) + 1;
                 if (gameData?.save) gameData.save();
                 
-                // Update inventory display
                 if (this.scene.inventory) {
                     this.scene.inventory.updateDisplay();
                 }
@@ -278,7 +228,6 @@ class Store {
             if (gameData.spendMoney(price)) {
                 gameData.updateInventory(itemType, currentTier + 1);
                 
-                // Apply stat bonuses
                 if (itemType === 'sword') {
                     gameData.stats.damage += this.items.sword.damage[currentTier];
                 } else if (itemType === 'shield') {
@@ -287,13 +236,10 @@ class Store {
                 
                 gameData.updateStats(gameData.stats);
                 
-                // Save after purchase
                 if (gameData?.save) gameData.save();
                 
-                // Check achievements
                 achievements.checkAchievement('firstPurchase');
                 
-                // Update inventory display
                 if (this.scene.inventory) {
                     this.scene.inventory.updateDisplay();
                 }
@@ -319,62 +265,29 @@ class Store {
         const currentTier = gameData.inventory[itemType] || 0;
         const canBuy = currentTier < 5;
         
-        // Update progress bar
-        if (card.progressBar) {
-            card.progressBar.clear()
-                .fillStyle(0x34495e, 1)
-                .fillRoundedRect(-40, 10, 80, 6, 3)
-                .fillStyle(0x3498db, 1)
-                .fillRoundedRect(-40, 10, (80 * currentTier) / 5, 6, 3);
-        }
-        
         if (canBuy) {
             const tierName = this.items[itemType].tiers[currentTier];
             const price = this.items[itemType].prices[currentTier];
-            const currentStat = currentTier > 0 ? 
-                (itemType === 'sword' ? this.items.sword.damage[currentTier - 1] : this.items.shield.armor[currentTier - 1]) : 0;
-            const nextStat = itemType === 'sword' ? 
+            const statValue = itemType === 'sword' ? 
                 this.items.sword.damage[currentTier] : 
                 this.items.shield.armor[currentTier];
             const statName = itemType === 'sword' ? 'DMG' : 'ARM';
             
             card.nameText.setText(`${tierName} ${this.items[itemType].name}`);
             card.buttonText.setText(`$${price}`);
-            if (card.statsText) card.statsText.setText(`${currentStat} → ${nextStat} ${statName}`);
-            
-            // Update image
-            const imageKey = tierName.toLowerCase().replace('wooden', 'wood');
-            if (this.scene.textures.exists(`${itemType}_${imageKey}`)) {
-                if (card.itemImage.texture) {
-                    card.itemImage.setTexture(`${itemType}_${imageKey}`).setDisplaySize(80, 50);
-                }
-            }
+            if (card.statsText) card.statsText.setText(`+${statValue} ${statName}`);
+            card.imageLabel.setText(`${tierName.toUpperCase()}\n${itemType.toUpperCase()}\nIMAGE`);
         } else {
-            const maxStat = itemType === 'sword' ? this.items.sword.damage[4] : this.items.shield.armor[4];
-            const statName = itemType === 'sword' ? 'DMG' : 'ARM';
             card.nameText.setText(`${this.items[itemType].name} (MAX)`);
             card.buttonText.setText('MAXED');
-            if (card.statsText) card.statsText.setText(`${maxStat} ${statName} (MAX)`);
-            
-            // Update to max tier image
-            if (this.scene.textures.exists(`${itemType}_diamond`)) {
-                if (card.itemImage.texture) {
-                    card.itemImage.setTexture(`${itemType}_diamond`).setDisplaySize(80, 50);
-                }
-            }
+            if (card.statsText) card.statsText.setText('MAXED');
         }
     }
     
     updateDisplays() {
         const stats = gameData.stats;
-        this.statsText.setText(`CURRENT STATS\nHP: ${stats.health}/${stats.maxHealth}\nDMG: ${stats.damage} | ARM: ${stats.armor}`);
-        this.moneyText.setText(`💰 ${gameData.money}\nCOINS`);
-        
-        // Update inventory preview
-        const swordTier = gameData.inventory.sword || 0;
-        const shieldTier = gameData.inventory.shield || 0;
-        const potions = gameData.healthPotions || 0;
-        this.inventoryText.setText(`INVENTORY\nSword: T${swordTier}/5\nShield: T${shieldTier}/5\nPotions: ${potions}`);
+        this.statsText.setText(`HP: ${stats.health}/${stats.maxHealth}\nDMG: ${stats.damage}\nARM: ${stats.armor}`);
+        this.moneyText.setText(`💰 ${gameData.money} coins`);
     }
 
     showPurchaseMessage(message, color = '#00ff00') {
@@ -382,7 +295,7 @@ class Store {
             this.purchaseMessage.destroy();
         }
         
-        this.purchaseMessage = this.scene.add.text(400, 380, message, {
+        this.purchaseMessage = this.scene.add.text(400, 480, message, {
             fontSize: '14px',
             fill: color,
             backgroundColor: '#000000',
@@ -406,25 +319,11 @@ class Store {
         });
         this.scene.physics.pause();
         
-        // Start real-time updates
-        this.updateInterval = setInterval(() => {
-            if (this.isOpen) {
-                this.updateDisplays();
-            }
-        }, 100);
-        
         if (gameData?.save) gameData.save();
     }
 
     close() {
         this.isOpen = false;
-        
-        // Stop real-time updates
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
-            this.updateInterval = null;
-        }
-        
         this.elements.forEach(element => element.setVisible(false));
         if (this.purchaseMessage) {
             this.purchaseMessage.destroy();
@@ -435,7 +334,6 @@ class Store {
     }
 
     addCloseCooldown() {
-        // Set cooldown on all buildings to prevent immediate reopening
         const buildings = [this.scene.storeBuilding, this.scene.upgradesBuilding, 
                           this.scene.decorationBuilding, this.scene.fightsBuilding];
         

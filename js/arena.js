@@ -33,6 +33,13 @@ class Arena {
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
+        // Description
+        this.description = this.scene.add.text(400, 60, 'Battle through 20 floors of turn-based combat for coins and glory!', {
+            fontSize: '14px',
+            fill: '#cccccc',
+            align: 'center'
+        }).setOrigin(0.5).setVisible(false);
+
         this.closeButton = this.scene.add.text(750, 30, 'X', {
             fontSize: '20px',
             fill: '#ff0000',
@@ -40,7 +47,7 @@ class Arena {
         }).setOrigin(0.5).setVisible(false).setInteractive();
         this.closeButton.on('pointerdown', () => this.close());
 
-        this.floorText = this.scene.add.text(400, 70, '', {
+        this.floorText = this.scene.add.text(400, 90, '', {
             fontSize: '18px',
             fill: '#ffaa00',
             fontWeight: 'bold'
@@ -99,7 +106,7 @@ class Arena {
             padding: { x: 15, y: 8 }
         }).setOrigin(0.5).setVisible(false).setInteractive();
 
-        this.elements = [this.background, this.title, this.closeButton, this.floorText,
+        this.elements = [this.background, this.title, this.description, this.closeButton, this.floorText,
                        this.combatLogContainer, this.playerStats, this.enemyStats, this.actionPrompt,
                        this.attackBar, this.defenseOverlay, this.attackButton, this.nextFloorButton, this.potionButton];
     }
@@ -430,7 +437,7 @@ class Arena {
         this.updateDisplay();
         this.elements.forEach(element => {
             element.setVisible(true);
-            element.setDepth(2000);
+            element.setDepth(3000);
         });
         
         this.scene.physics.pause();

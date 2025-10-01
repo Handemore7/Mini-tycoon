@@ -14,3 +14,11 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+// Initialize WebSocket connection
+if (typeof window.webSocketManager !== 'undefined') {
+    console.log('🔌 Initializing WebSocket connection...');
+    window.webSocketManager.connect(); // Auto-detect URL
+} else {
+    console.error('❌ WebSocketManager not found');
+}
