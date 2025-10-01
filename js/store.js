@@ -127,6 +127,9 @@ class Store {
                 
                 gameData.updateStats(gameData.stats);
                 
+                // Check achievements
+                achievements.checkAchievement('firstPurchase');
+                
                 // Update inventory display
                 if (this.scene.inventory) {
                     this.scene.inventory.updateDisplay();

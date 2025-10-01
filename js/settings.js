@@ -41,25 +41,34 @@ class SettingsMenu {
         }).setOrigin(0.5).setVisible(false);
 
         // Export button
-        this.exportButton = this.scene.add.text(320, 370, 'EXPORT SAVE', {
-            fontSize: '14px',
+        this.exportButton = this.scene.add.text(280, 370, 'EXPORT', {
+            fontSize: '12px',
             fill: '#ffaa00',
             backgroundColor: '#333333',
-            padding: { x: 8, y: 4 }
+            padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setVisible(false).setInteractive();
         this.exportButton.on('pointerdown', () => this.exportSave());
 
+        // Delete button
+        this.deleteButton = this.scene.add.text(360, 370, 'DELETE DATA', {
+            fontSize: '12px',
+            fill: '#ff0000',
+            backgroundColor: '#333333',
+            padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setVisible(false).setInteractive();
+        this.deleteButton.on('pointerdown', () => this.confirmDelete());
+
         // Save & Close button
         this.saveButton = this.scene.add.text(480, 370, 'SAVE & CLOSE', {
-            fontSize: '14px',
+            fontSize: '12px',
             fill: '#00ff00',
             backgroundColor: '#333333',
-            padding: { x: 8, y: 4 }
+            padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setVisible(false).setInteractive();
         this.saveButton.on('pointerdown', () => this.close());
 
         this.elements = [this.background, this.title, this.nameLabel, this.streamerLabel, 
-                        this.volumeLabel, this.saveInfo, this.exportButton, this.saveButton];
+                        this.volumeLabel, this.saveInfo, this.exportButton, this.deleteButton, this.saveButton];
     }
 
     toggle() {
@@ -98,16 +107,93 @@ class SettingsMenu {
     exportSave() {
         if (typeof saveSystem !== 'undefined') {
             if (saveSystem.exportSave()) {
-                // Show success message
-                const message = this.scene.add.text(400, 420, 'Save exported successfully!', {
-                    fontSize: '12px',
-                    fill: '#00ff00',
-                    backgroundColor: '#000000',
-                    padding: { x: 8, y: 4 }
-                }).setOrigin(0.5);
-                
-                this.scene.time.delayedCall(2000, () => message.destroy());
+                this.showMessage('Save exported successfully!', '#00ff00');
             }
         }
+    }
+
+    confirmDelete() {
+        // Create confirmation dialog
+        this.confirmBg = this.scene.add.rectangle(400, 300, 300, 150, 0x000000, 0.9);
+        this.confirmBg.setDepth(3000);
+        
+        this.confirmText = this.scene.add.text(400, 270, 'Delete all game data?\nThis cannot be undone!', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(3000);
+        
+        this.confirmYes = this.scene.add.text(350, 320, 'YES', {
+            fontSize: '14px',
+            fill: '#ff0000',
+            backgroundColor: '#333333',
+            padding: { x: 8, y: 4 }
+        }).setOrigin(0.5).setDepth(3000).setInteractive();
+        this.confirmYes.on('pointerdown', () => this.deleteData());
+        
+        this.confirmNo = this.scene.add.text(450, 320, 'NO', {
+            fontSize: '14px',
+            fill: '#00ff00',
+            backgroundColor: '#333333',
+            padding: { x: 8, y: 4 }
+        }).setOrigin(0.5).setDepth(3000).setInteractive();
+        this.confirmNo.on('pointerdown', () => this.cancelDelete());
+    }
+
+    async deleteData() {
+        this.cancelDelete();
+        this.showMessage('Deleting data...', '#ff0000');
+        
+        // Delete from database
+        if (window.database && gameData.playerName) {
+            await window.database.deletePlayer(gameData.playerName);
+        }
+        
+        // Clear ALL localStorage keys
+        localStorage.clear();
+        
+        // Reset gameData object to defaults
+        Object.assign(gameData, {
+            playerName: '',
+            twitchStreamer: 'your_streamer_name',
+            volume: 0.5,
+            money: 100,
+            stats: { health: 100, maxHealth: 100, damage: 10, attackSpeed: 1, moveSpeed: 100, armor: 0 },
+            inventory: { sword: 0, shield: 0 },
+            decorations: [],
+            upgrades: { boots: 0, passiveIncome: 0, activeIncome: 0 },
+            passiveIncome: 1,
+            chatBonus: 10,
+            chatStreak: 0,
+            lastChatDate: null,
+            arenaWins: 0,
+            decorationInventory: {},
+            healthPotions: 0
+        });
+        
+        this.showMessage('All data deleted! Restarting...', '#00ff00');
+        
+        // Auto-reload after successful deletion
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    }
+
+    cancelDelete() {
+        if (this.confirmBg) this.confirmBg.destroy();
+        if (this.confirmText) this.confirmText.destroy();
+        if (this.confirmYes) this.confirmYes.destroy();
+        if (this.confirmNo) this.confirmNo.destroy();
+    }
+
+    showMessage(text, color) {
+        const message = this.scene.add.text(400, 420, text, {
+            fontSize: '12px',
+            fill: color,
+            backgroundColor: '#000000',
+            padding: { x: 8, y: 4 }
+        }).setOrigin(0.5).setDepth(2500);
+        
+        this.scene.time.delayedCall(3000, () => message.destroy());
     }
 }

@@ -16,16 +16,27 @@ class Database {
       const { initializeApp } = await import(
         "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"
       );
-      const { getFirestore, doc, setDoc, getDoc, onSnapshot } = await import(
+      const { getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc, disableNetwork, enableNetwork } = await import(
         "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
       );
 
       this.app = initializeApp(firebaseConfig);
       this.db = getFirestore(this.app);
+      
+      // Force online mode
+      try {
+        await enableNetwork(this.db);
+        console.log('🌐 Forced Firebase online mode');
+      } catch (error) {
+        console.log('ℹ️ Network enable failed:', error.code);
+      }
       this.doc = doc;
       this.setDoc = setDoc;
       this.getDoc = getDoc;
       this.onSnapshot = onSnapshot;
+      this.deleteDoc = deleteDoc;
+      this.enableNetwork = enableNetwork;
+      this.disableNetwork = disableNetwork;
 
       this.isOnline = true;
       console.log("✅ Database connected");
@@ -96,8 +107,8 @@ class Database {
         console.log(`💾 Saved ${playerName} to database`);
         return true;
       } catch (error) {
-        console.error("❌ Firebase save error:", error);
-        console.log("Save failed, using localStorage backup");
+        // Network blocked or other Firebase error - continue silently
+        console.log("ℹ️ Firebase save failed, using localStorage backup");
       }
     }
 
@@ -165,6 +176,86 @@ class Database {
       console.error("❌ Firebase write test failed:", error);
       this.showConnectionStatus("❌ Write permissions denied", "#ff0000");
     }
+  }
+
+  async createPlayer(playerName, twitchStreamer) {
+    if (!this.validatePlayerName(playerName)) {
+      console.error('❌ Invalid player name for create');
+      return false;
+    }
+
+    if (this.isOnline) {
+      try {
+        const defaultData = {
+          playerName: playerName,
+          twitchStreamer: twitchStreamer || 'your_streamer_name',
+          volume: 0.5,
+          money: 100,
+          stats: { health: 100, maxHealth: 100, damage: 10, attackSpeed: 1, moveSpeed: 100, armor: 0 },
+          inventory: { sword: 0, shield: 0 },
+          decorations: [],
+          upgrades: { boots: 0, passiveIncome: 0, activeIncome: 0 },
+          passiveIncome: 1,
+          chatBonus: 10,
+          chatStreak: 0,
+          lastChatDate: null,
+          arenaWins: 0,
+          decorationInventory: {},
+          healthPotions: 0,
+          achievements: {},
+          unlockedDecorations: {},
+          createdAt: new Date().toISOString()
+        };
+        
+        await this.setDoc(this.doc(this.db, "players", playerName), defaultData);
+        console.log(`👤 Created new player ${playerName} in database`);
+        return true;
+      } catch (error) {
+        console.error('❌ Firebase create failed:', error);
+      }
+    }
+    return false;
+  }
+
+  async deletePlayer(playerName) {
+    if (!this.validatePlayerName(playerName)) {
+      console.error('❌ Invalid player name for delete');
+      return false;
+    }
+
+    console.log(`🗑️ Attempting to delete ${playerName} from Firebase...`);
+    
+    // Delete from Firebase
+    if (this.isOnline) {
+      try {
+        // Force online mode before delete
+        await this.enableNetwork(this.db);
+        console.log('🌐 Ensured online mode for delete');
+        
+        await this.deleteDoc(this.doc(this.db, "players", playerName));
+        console.log(`✅ Delete command sent for ${playerName}`);
+        
+        // Immediate verification
+        const docSnap = await this.getDoc(this.doc(this.db, "players", playerName));
+        if (docSnap.exists()) {
+          console.warn(`⚠️ Document ${playerName} still exists after delete`);
+        } else {
+          console.log(`✅ Confirmed: ${playerName} deleted from Firebase`);
+        }
+        
+      } catch (error) {
+        console.error(`❌ Firebase delete failed:`, error);
+        console.error(`Error code: ${error.code}`);
+        console.error(`Error message: ${error.message}`);
+      }
+    } else {
+      console.log('ℹ️ Database offline, skipping Firebase delete');
+    }
+
+    // Delete from localStorage
+    localStorage.removeItem(`minitycoon_${playerName}`);
+    console.log(`📋 Cleared localStorage for ${playerName}`);
+    return true;
   }
 
   // Sincronización en tiempo real (opcional)

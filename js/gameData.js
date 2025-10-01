@@ -139,6 +139,9 @@ class GameData {
 
     addMoney(amount) {
         this.money += amount;
+        if (typeof achievements !== 'undefined') {
+            achievements.checkAchievement('richPlayer');
+        }
         if (typeof saveSystem !== 'undefined') {
             saveSystem.debouncedSave();
         }
@@ -157,6 +160,9 @@ class GameData {
 
     updateStats(newStats) {
         Object.assign(this.stats, newStats);
+        if (typeof achievements !== 'undefined') {
+            achievements.checkAchievement('speedDemon');
+        }
         if (typeof saveSystem !== 'undefined') {
             saveSystem.immediateSave();
         }

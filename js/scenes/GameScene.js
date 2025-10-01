@@ -243,9 +243,15 @@ class GameScene extends Phaser.Scene {
                 return;
             }
             
-            // Name is available, proceed
+            // Name is available, create new user in Firebase
             gameData.playerName = playerName;
             gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
+            
+            // Create user in Firebase
+            if (window.database) {
+                await window.database.createPlayer(playerName, gameData.twitchStreamer);
+            }
+            
             this.hideNamePrompt();
             this.loadPlayerData();
             
@@ -254,6 +260,12 @@ class GameScene extends Phaser.Scene {
             // If check fails, allow the name (fallback)
             gameData.playerName = playerName;
             gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
+            
+            // Try to create user in Firebase (fallback)
+            if (window.database) {
+                await window.database.createPlayer(playerName, gameData.twitchStreamer);
+            }
+            
             this.hideNamePrompt();
             this.loadPlayerData();
         }
@@ -272,6 +284,14 @@ class GameScene extends Phaser.Scene {
     }
     
     initializeGame() {
+        // Set global scene reference for achievements
+        window.currentScene = this;
+        
+        // Check all achievements on game start
+        if (typeof achievements !== 'undefined') {
+            achievements.checkAllAchievements();
+        }
+        
         // Create player
         this.player = new Player(this, 400, 300);
 

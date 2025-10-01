@@ -7,25 +7,38 @@ class Decorations {
         this.decorationItems = {
             table: {
                 name: 'Wooden Table',
-                cost: 500,
-                unlockType: 'purchase',
+                cost: 200,
+                achievement: 'firstPurchase',
                 icon: '🪑',
                 size: { width: 32, height: 32 }
             },
             plant: {
                 name: 'Decorative Plant',
-                cost: 0,
-                unlockType: 'streak',
-                streakRequired: 3,
+                cost: 150,
+                achievement: 'chatStreak3',
                 icon: '🌱',
                 size: { width: 24, height: 24 }
             },
             trophy: {
                 name: 'Victory Trophy',
-                cost: 0,
-                unlockType: 'arena',
+                cost: 300,
+                achievement: 'arenaWin',
                 icon: '🏆',
                 size: { width: 28, height: 28 }
+            },
+            fountain: {
+                name: 'Golden Fountain',
+                cost: 1000,
+                achievement: 'richPlayer',
+                icon: '⛲',
+                size: { width: 40, height: 40 }
+            },
+            statue: {
+                name: 'Speed Statue',
+                cost: 800,
+                achievement: 'speedDemon',
+                icon: '🗿',
+                size: { width: 36, height: 36 }
             }
         };
         this.createInterface();
@@ -90,7 +103,14 @@ class Decorations {
         let canUse = false;
 
         // Check unlock status
-        if (item.unlockType === 'purchase') {
+        const isUnlocked = achievements.isDecorationUnlocked(itemType);
+        
+        if (!isUnlocked) {
+            const achievement = achievements.achievements[item.achievement];
+            statusText = `${item.name}\n🔒 ${achievement.description}`;
+            buttonColor = '#666666';
+            canUse = false;
+        } else {
             if (gameData.money >= item.cost) {
                 statusText = `${item.name}\n$${item.cost}`;
                 buttonColor = '#444444';
@@ -98,26 +118,7 @@ class Decorations {
             } else {
                 statusText = `${item.name}\n$${item.cost}\nNot enough money`;
                 buttonColor = '#666666';
-            }
-        } else if (item.unlockType === 'streak') {
-            const currentStreak = gameData.chatStreak || 0;
-            if (currentStreak >= item.streakRequired) {
-                statusText = `${item.name}\nUnlocked!`;
-                buttonColor = '#444444';
-                canUse = true;
-            } else {
-                statusText = `${item.name}\nChat ${item.streakRequired} days\n(${currentStreak}/${item.streakRequired})`;
-                buttonColor = '#666666';
-            }
-        } else if (item.unlockType === 'arena') {
-            const arenaWins = gameData.arenaWins || 0;
-            if (arenaWins > 0) {
-                statusText = `${item.name}\nUnlocked!`;
-                buttonColor = '#444444';
-                canUse = true;
-            } else {
-                statusText = `${item.name}\nWin 1 Arena Fight`;
-                buttonColor = '#666666';
+                canUse = false;
             }
         }
 
@@ -140,40 +141,23 @@ class Decorations {
     selectDecoration(itemType) {
         const item = this.decorationItems[itemType];
         
-        // Handle purchase - add to inventory
-        if (item.unlockType === 'purchase') {
-            if (!gameData.spendMoney(item.cost)) {
-                this.showMessage('Not enough money!', '#ff0000');
-                return;
-            }
-            // Add to inventory
-            if (!gameData.decorationInventory) gameData.decorationInventory = {};
-            gameData.decorationInventory[itemType] = (gameData.decorationInventory[itemType] || 0) + 1;
-            gameData.save();
-            
-            // Update inventory display
-            if (this.scene.inventory) {
-                this.scene.inventory.updateDisplay();
-            }
-            
-            this.showMessage(`${item.name} added to inventory!`);
-            this.updateButtons();
-        } else {
-            // For unlocked items, add to inventory if not already there
-            if (!gameData.decorationInventory) gameData.decorationInventory = {};
-            if (!gameData.decorationInventory[itemType]) {
-                gameData.decorationInventory[itemType] = 1;
-                gameData.save();
-                
-                // Update inventory display
-                if (this.scene.inventory) {
-                    this.scene.inventory.updateDisplay();
-                }
-                
-                this.showMessage(`${item.name} added to inventory!`);
-                this.updateButtons();
-            }
+        if (!gameData.spendMoney(item.cost)) {
+            this.showMessage('Not enough money!', '#ff0000');
+            return;
         }
+        
+        // Add to inventory
+        if (!gameData.decorationInventory) gameData.decorationInventory = {};
+        gameData.decorationInventory[itemType] = (gameData.decorationInventory[itemType] || 0) + 1;
+        gameData.save();
+        
+        // Update inventory display
+        if (this.scene.inventory) {
+            this.scene.inventory.updateDisplay();
+        }
+        
+        this.showMessage(`${item.name} added to inventory!`);
+        this.updateButtons();
     }
 
     enterPlacementMode() {
