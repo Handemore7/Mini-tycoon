@@ -37,7 +37,7 @@ Build your empire through strategic purchases, combat, and community interaction
 - **X**: Skip tutorial or close menus
 
 ### Earning Money
-- **Passive**: 1 coin every 5 seconds
+- **Passive**: Coins earned every second (base 1 coin/sec, upgradable)
 - **Twitch Chat**: 10 coins per message (if connected)
 - **Arena**: Bonus coins from victories
 - **Events**: Special community events

@@ -40,7 +40,7 @@ class Tutorial {
                 highlight: 'arena'
             },
             {
-                text: "Press C to toggle your inventory. You earn 1 coin every 5 seconds!",
+                text: "Press C to toggle your inventory. You earn coins passively every second (configurable via upgrades)!",
                 target: null,
                 action: 'inventory',
                 highlight: 'ui'

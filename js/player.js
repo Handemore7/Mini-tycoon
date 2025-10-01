@@ -98,10 +98,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        // Passive money generation (every 5 seconds) with error handling
+        // Passive money generation (every 1 second)
         const now = Date.now();
-        if (now - this.lastMoneyTime > 5000) {
+        if (now - this.lastMoneyTime > 1000) {
             try {
+                // passiveIncome is coins per second
                 gameData.addMoney(gameData.passiveIncome || 1);
                 this.lastMoneyTime = now;
                 window.errorLogger?.trackGameEvent('passive_income', { amount: gameData.passiveIncome || 1 });

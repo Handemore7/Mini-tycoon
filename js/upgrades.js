@@ -13,7 +13,7 @@ class Upgrades {
             },
             passiveIncome: {
                 name: 'Passive Income',
-                description: 'Increases coins per 5 seconds',
+                description: 'Increases coins per second',
                 baseCost: 200,
                 costMultiplier: 2.0,
                 incomeBonus: 1,
