@@ -25,6 +25,9 @@ class GameData {
         this.decorationInventory = {};
         this.healthPotions = 0;
         this.bestArenaWave = 0;
+        this.playerPosition = { x: 400, y: 300 };
+        this.achievements = {};
+        this.lastSaveTime = Date.now();
         
         // Load saved data if available
         this.loadGame();
@@ -90,6 +93,9 @@ class GameData {
         this.decorationInventory = saveData.decorationInventory || {};
         this.healthPotions = saveData.healthPotions || 0;
         this.bestArenaWave = saveData.bestArenaWave || 0;
+        this.playerPosition = saveData.playerPosition || { x: 400, y: 300 };
+        this.achievements = saveData.achievements || {};
+        this.lastSaveTime = saveData.lastSaveTime || Date.now();
     }
 
     async save() {
@@ -126,7 +132,10 @@ class GameData {
             arenaWins: this.arenaWins || 0,
             decorationInventory: this.decorationInventory || {},
             healthPotions: this.healthPotions || 0,
-            bestArenaWave: this.bestArenaWave || 0
+            bestArenaWave: this.bestArenaWave || 0,
+            playerPosition: this.playerPosition || { x: 400, y: 300 },
+            achievements: this.achievements || {},
+            lastSaveTime: Date.now()
         };
     }
 
@@ -142,24 +151,43 @@ class GameData {
     }
 
     addMoney(amount) {
-        this.money += amount;
-        if (typeof achievements !== 'undefined') {
-            achievements.checkAchievement('richPlayer');
-        }
-        if (typeof saveSystem !== 'undefined') {
-            saveSystem.debouncedSave();
+        if (window.stateManager) {
+            const success = window.stateManager.addMoney(amount);
+            if (success) {
+                this.money = window.stateManager.getGame().money;
+                if (typeof achievements !== 'undefined') {
+                    achievements.checkAchievement('richPlayer');
+                }
+            }
+            return success;
+        } else {
+            this.money += amount;
+            if (typeof achievements !== 'undefined') {
+                achievements.checkAchievement('richPlayer');
+            }
+            if (typeof saveSystem !== 'undefined') {
+                saveSystem.debouncedSave();
+            }
         }
     }
 
     spendMoney(amount) {
-        if (this.money >= amount) {
-            this.money -= amount;
-            if (typeof saveSystem !== 'undefined') {
-                saveSystem.debouncedSave();
+        if (window.stateManager) {
+            const success = window.stateManager.spendMoney(amount);
+            if (success) {
+                this.money = window.stateManager.getGame().money;
             }
-            return true;
+            return success;
+        } else {
+            if (this.money >= amount) {
+                this.money -= amount;
+                if (typeof saveSystem !== 'undefined') {
+                    saveSystem.debouncedSave();
+                }
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     updateStats(newStats) {
@@ -183,6 +211,18 @@ class GameData {
         Object.assign(this, settings);
         if (typeof saveSystem !== 'undefined') {
             saveSystem.immediateSave();
+        }
+    }
+    
+    updatePlayerPosition(x, y) {
+        if (window.stateManager) {
+            window.stateManager.updatePlayerPosition(x, y);
+            this.playerPosition = window.stateManager.getPlayer().position;
+        } else {
+            this.playerPosition = { x, y };
+            if (typeof saveSystem !== 'undefined') {
+                saveSystem.debouncedSave();
+            }
         }
     }
 }

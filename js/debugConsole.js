@@ -147,6 +147,10 @@ class DebugConsole {
             this.showMessage('Stats reset to default!');
         });
 
+        this.monitorBtn = this.createButton(420, buttonY + 120, 'System Monitor', () => {
+            this.showSystemMonitor();
+        });
+
         this.exitBtn = this.createButton(520, buttonY + 120, 'Exit', () => {
             this.toggle();
         });
@@ -178,6 +182,39 @@ class DebugConsole {
         this.scene.time.delayedCall(2000, () => {
             if (this.debugMessage) this.debugMessage.destroy();
         });
+    }
+
+    showSystemMonitor() {
+        const memoryStats = window.memoryManager?.getMemoryStats() || {};
+        const errorStats = window.errorLogger?.getPerformanceSummary() || {};
+        const assetStats = window.assetPreloader?.getCacheStats() || {};
+        
+        console.group('🔧 System Monitor');
+        console.log('Memory Manager:', memoryStats);
+        console.log('Performance Metrics:', errorStats);
+        console.log('Asset Cache:', assetStats);
+        
+        if (window.stateManager) {
+            console.log('State Manager:', {
+                player: window.stateManager.getPlayer(),
+                game: window.stateManager.getGame(),
+                inventory: window.stateManager.getInventory(),
+                progression: window.stateManager.getProgression()
+            });
+        }
+        
+        if (window.errorLogger) {
+            console.log('Recent Errors:', window.errorLogger.getLogsByLevel(0));
+            console.log('Export Logs:', 'window.errorLogger.exportLogs()');
+        }
+        
+        if (window.testFramework) {
+            console.log('Run Tests:', 'window.testFramework.runTests()');
+        }
+        
+        console.groupEnd();
+        
+        this.showMessage('System info logged to console!');
     }
 
     toggle() {

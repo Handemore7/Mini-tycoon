@@ -117,7 +117,8 @@ class Upgrades {
             // Apply upgrade effects
             this.applyUpgradeEffect(upgradeType);
             
-            gameData.save();
+            // Save after upgrade purchase
+            if (gameData?.save) gameData.save();
             this.showPurchaseMessage(`${upgrade.name} upgraded to tier ${currentTier + 1}!`);
             this.updateButtons();
         } else {
@@ -189,6 +190,9 @@ class Upgrades {
             element.setDepth(2000);
         });
         this.scene.physics.pause();
+        
+        // Save when opening upgrades
+        if (gameData?.save) gameData.save();
     }
 
     close() {

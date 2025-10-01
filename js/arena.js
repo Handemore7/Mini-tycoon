@@ -223,7 +223,14 @@ class Arena {
         this.updateDisplay();
         
         if (gameData?.save) gameData.save();
-        this.scene.time.delayedCall(1000, () => this.combatSystem.startEnemyTurn());
+        if (window.memoryManager) {
+            window.memoryManager.createTimer(this.scene, {
+                delay: 1000,
+                callback: () => this.combatSystem.startEnemyTurn()
+            });
+        } else {
+            this.scene.time.delayedCall(1000, () => this.combatSystem.startEnemyTurn());
+        }
     }
     
     showTempFeedback(message, color) {
@@ -258,7 +265,14 @@ class Arena {
         }
         
         if (gameData?.save) gameData.save();
-        this.scene.time.delayedCall(3000, () => this.close());
+        if (window.memoryManager) {
+            window.memoryManager.createTimer(this.scene, {
+                delay: 3000,
+                callback: () => this.close()
+            });
+        } else {
+            this.scene.time.delayedCall(3000, () => this.close());
+        }
     }
 
     gameOver() {
@@ -284,7 +298,14 @@ class Arena {
         this.hideAttackUI();
         this.hideDefenseUI();
         
-        this.scene.time.delayedCall(3000, () => this.close());
+        if (window.memoryManager) {
+            window.memoryManager.createTimer(this.scene, {
+                delay: 3000,
+                callback: () => this.close()
+            });
+        } else {
+            this.scene.time.delayedCall(3000, () => this.close());
+        }
     }
 
     hideAttackUI() {
@@ -413,6 +434,9 @@ class Arena {
         });
         
         this.scene.physics.pause();
+        
+        // Save when opening arena
+        if (gameData?.save) gameData.save();
     }
 
     close() {
@@ -445,9 +469,16 @@ class Arena {
         buildings.forEach(building => {
             if (building) {
                 building.interactionCooldown = true;
-                this.scene.time.delayedCall(2000, () => {
-                    building.interactionCooldown = false;
-                });
+                if (window.memoryManager) {
+                    window.memoryManager.createTimer(this.scene, {
+                        delay: 2000,
+                        callback: () => { building.interactionCooldown = false; }
+                    });
+                } else {
+                    this.scene.time.delayedCall(2000, () => {
+                        building.interactionCooldown = false;
+                    });
+                }
             }
         });
     }

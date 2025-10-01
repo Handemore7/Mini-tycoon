@@ -149,7 +149,9 @@ class Decorations {
         // Add to inventory
         if (!gameData.decorationInventory) gameData.decorationInventory = {};
         gameData.decorationInventory[itemType] = (gameData.decorationInventory[itemType] || 0) + 1;
-        gameData.save();
+        
+        // Save after decoration purchase
+        if (gameData?.save) gameData.save();
         
         // Update inventory display
         if (this.scene.inventory) {
@@ -213,7 +215,9 @@ class Decorations {
 
         // Add to game data
         gameData.decorations.push(decoration);
-        gameData.save();
+        
+        // Save after placing decoration
+        if (gameData?.save) gameData.save();
 
         // Create actual decoration sprite
         this.createDecorationSprite(decoration);
@@ -416,6 +420,9 @@ class Decorations {
             element.setDepth(2000);
         });
         this.scene.physics.pause();
+        
+        // Save when opening decorations
+        if (gameData?.save) gameData.save();
     }
 
     close() {

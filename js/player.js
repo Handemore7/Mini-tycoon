@@ -16,6 +16,14 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         
         this.lastMoneyTime = Date.now();
         this.currentDirection = 'south';
+        this.lastPositionSave = Date.now();
+        this.lastX = x;
+        this.lastY = y;
+        
+        // Track object for memory management
+        if (window.memoryManager) {
+            window.memoryManager.trackObject(this, 'Player');
+        }
     }
 
     update() {
@@ -76,13 +84,35 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             this.stop();
             const spriteKey = this.scene.textures.exists(`player_${this.currentDirection}`) ? `player_${this.currentDirection}` : 'player_fallback';
             this.setTexture(spriteKey);
+            
+            // Save position when stopping (if position changed)
+            if (this.lastX !== this.x || this.lastY !== this.y) {
+                gameData.updatePlayerPosition(this.x, this.y);
+                this.lastX = this.x;
+                this.lastY = this.y;
+            }
         }
 
-        // Passive money generation (every 5 seconds)
+        // Passive money generation (every 5 seconds) with error handling
         const now = Date.now();
         if (now - this.lastMoneyTime > 5000) {
-            gameData.addMoney(gameData.passiveIncome || 1);
-            this.lastMoneyTime = now;
+            try {
+                gameData.addMoney(gameData.passiveIncome || 1);
+                this.lastMoneyTime = now;
+                window.errorLogger?.trackGameEvent('passive_income', { amount: gameData.passiveIncome || 1 });
+            } catch (error) {
+                window.errorLogger?.error('Passive income error:', error);
+            }
+        }
+        
+        // Save position every 2 seconds when moving with rate limiting
+        if (isMoving && now - this.lastPositionSave > 2000) {
+            try {
+                gameData.updatePlayerPosition(this.x, this.y);
+                this.lastPositionSave = now;
+            } catch (error) {
+                window.errorLogger?.error('Position save error:', error);
+            }
         }
     }
 }

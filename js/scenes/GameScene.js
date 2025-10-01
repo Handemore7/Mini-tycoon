@@ -4,31 +4,37 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // Load directional player sprites
+        // Start asset preloading
+        if (window.assetPreloader) {
+            window.assetPreloader.preloadCriticalAssets();
+            window.assetPreloader.preloadWalkingAnimations();
+        }
+        
+        // Load directional player sprites with error handling
         const directions = ['north', 'south', 'east', 'west', 'north-east', 'north-west', 'south-east', 'south-west'];
         directions.forEach(dir => {
             this.load.image(`player_${dir}`, `assets/sprites/player/rotations/${dir}.png`);
             
             // Load walking animation frames
-            const frames = [];
             for (let i = 0; i < 8; i++) {
-                frames.push({ key: `walk_${dir}_${i}`, url: `assets/sprites/player/animations/walking/${dir}/frame_00${i}.png` });
+                this.load.image(`walk_${dir}_${i}`, `assets/sprites/player/animations/walking/${dir}/frame_00${i}.png`);
             }
-            frames.forEach(frame => this.load.image(frame.key, frame.url));
         });
         
-        // Load background
+        // Load other assets
         this.load.image('background', 'assets/sprites/background.png');
-        
-        // Load building sprites
         this.load.image('store_building', 'assets/sprites/buildings/store.png');
         this.load.image('upgrades_building', 'assets/sprites/buildings/upgrades.png');
         this.load.image('decoration_building', 'assets/sprites/buildings/decoration.png');
         this.load.image('arena_building', 'assets/sprites/buildings/arena.png');
         
-        // Debug loading
+        // Enhanced error handling
         this.load.on('loaderror', (file) => {
-            console.log('Failed to load:', file.src);
+            window.errorLogger?.error('Failed to load asset:', file.src);
+        });
+        
+        this.load.on('progress', (progress) => {
+            window.errorLogger?.trackPerformance('assetLoadProgress', progress * 100);
         });
     }
     
@@ -292,8 +298,10 @@ class GameScene extends Phaser.Scene {
             achievements.checkAllAchievements();
         }
         
-        // Create player
-        this.player = new Player(this, 400, 300);
+        // Create player at saved position
+        const spawnX = gameData.playerPosition?.x || 400;
+        const spawnY = gameData.playerPosition?.y || 300;
+        this.player = new Player(this, spawnX, spawnY);
 
         // Create buildings in corners
         this.storeBuilding = new Building(this, 100, 100, 'store', 'STORE');
@@ -307,9 +315,13 @@ class GameScene extends Phaser.Scene {
         // Create settings menu
         this.settingsMenu = new SettingsMenu(this);
 
-        // ESC key for settings
+        // ESC key for settings with memory management
         this.escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-        this.escKey.on('down', () => this.settingsMenu.toggle());
+        if (window.memoryManager) {
+            window.memoryManager.addListener(this.escKey, 'down', () => this.settingsMenu.toggle(), this);
+        } else {
+            this.escKey.on('down', () => this.settingsMenu.toggle());
+        }
 
         // Individual building collisions
         this.physics.add.collider(this.player, this.storeBuilding);
@@ -349,6 +361,41 @@ class GameScene extends Phaser.Scene {
         
         // Resume physics
         this.physics.resume();
+        
+        // Initialize state manager with current game data
+        if (window.stateManager) {
+            window.stateManager.importState({
+                player: {
+                    name: gameData.playerName,
+                    position: gameData.playerPosition || { x: 400, y: 300 },
+                    stats: gameData.stats
+                },
+                game: {
+                    money: gameData.money,
+                    volume: gameData.volume,
+                    twitchStreamer: gameData.twitchStreamer,
+                    passiveIncome: gameData.passiveIncome,
+                    chatBonus: gameData.chatBonus,
+                    chatStreak: gameData.chatStreak,
+                    lastChatDate: gameData.lastChatDate,
+                    arenaWins: gameData.arenaWins,
+                    bestArenaWave: gameData.bestArenaWave,
+                    healthPotions: gameData.healthPotions,
+                    lastSaveTime: gameData.lastSaveTime
+                },
+                inventory: {
+                    sword: gameData.inventory.sword,
+                    shield: gameData.inventory.shield,
+                    decorationInventory: gameData.decorationInventory
+                },
+                progression: {
+                    upgrades: gameData.upgrades,
+                    achievements: gameData.achievements,
+                    decorations: gameData.decorations,
+                    unlockedDecorations: gameData.unlockedDecorations
+                }
+            });
+        }
     }
 
     createInteractionZone(building) {
@@ -378,12 +425,30 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        if (this.player) {
-            this.player.update();
+        try {
+            if (this.player) {
+                this.player.update();
+            }
+            if (this.ui) {
+                this.ui.update();
+            }
+        } catch (error) {
+            window.errorLogger?.error('Update loop error:', error);
         }
-        if (this.ui) {
-            this.ui.update();
+    }
+    
+    shutdown() {
+        // Clean up scene resources
+        if (window.memoryManager) {
+            window.memoryManager.cleanupScene(this);
         }
+        
+        // Clean up event listeners
+        if (this.escKey) {
+            this.escKey.removeAllListeners();
+        }
+        
+        window.errorLogger?.info('GameScene shutdown completed');
     }
 
     showMessage(text, color = '#00ff00') {

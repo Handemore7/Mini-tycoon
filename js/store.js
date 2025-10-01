@@ -96,7 +96,7 @@ class Store {
         if (itemType === 'potion') {
             if (gameData.spendMoney(this.items.potion.price)) {
                 gameData.healthPotions = (gameData.healthPotions || 0) + 1;
-                gameData.save();
+                if (gameData?.save) gameData.save();
                 
                 // Update inventory display
                 if (this.scene.inventory) {
@@ -126,6 +126,9 @@ class Store {
                 }
                 
                 gameData.updateStats(gameData.stats);
+                
+                // Save after purchase
+                if (gameData?.save) gameData.save();
                 
                 // Check achievements
                 achievements.checkAchievement('firstPurchase');
@@ -192,6 +195,9 @@ class Store {
             element.setDepth(2000);
         });
         this.scene.physics.pause();
+        
+        // Save when opening store
+        if (gameData?.save) gameData.save();
     }
 
     close() {

@@ -157,6 +157,9 @@ class CombatSystem {
             this.arena.totalCoinsEarned += this.arena.currentEnemy.coins;
             this.arena.currentEnemy = null;
             this.arena.turnState = 'waiting';
+            
+            // Save when clearing a floor
+            if (gameData?.save) gameData.save();
         } else {
             this.arena.scene.time.delayedCall(1000, () => this.startEnemyTurn());
         }

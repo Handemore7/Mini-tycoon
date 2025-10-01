@@ -26,7 +26,12 @@ class SaveSystem {
                 chatBonus: gameData.chatBonus,
                 chatStreak: gameData.chatStreak,
                 lastChatDate: gameData.lastChatDate,
-                arenaWins: gameData.arenaWins
+                arenaWins: gameData.arenaWins,
+                decorationInventory: gameData.decorationInventory,
+                healthPotions: gameData.healthPotions,
+                bestArenaWave: gameData.bestArenaWave,
+                playerPosition: gameData.playerPosition,
+                achievements: gameData.achievements
             };
 
             // Save main game data
@@ -93,6 +98,11 @@ class SaveSystem {
         gameData.chatStreak = saveData.chatStreak || 0;
         gameData.lastChatDate = saveData.lastChatDate || null;
         gameData.arenaWins = saveData.arenaWins || 0;
+        gameData.decorationInventory = saveData.decorationInventory || {};
+        gameData.healthPotions = saveData.healthPotions || 0;
+        gameData.bestArenaWave = saveData.bestArenaWave || 0;
+        gameData.playerPosition = saveData.playerPosition || { x: 400, y: 300 };
+        gameData.achievements = saveData.achievements || {};
     }
 
     // Create rotating backups
