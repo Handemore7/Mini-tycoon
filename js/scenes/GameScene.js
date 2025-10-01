@@ -332,6 +332,9 @@ class GameScene extends Phaser.Scene {
         // Initialize decoration system
         this.decorationSystem = new Decorations(this);
         
+        // Initialize arena system
+        this.arenaSystem = new Arena(this);
+        
         // Initialize Twitch chat
         this.twitchChat = new TwitchChat(this);
         

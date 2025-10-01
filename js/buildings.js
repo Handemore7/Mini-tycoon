@@ -65,7 +65,8 @@ class Building extends Phaser.Physics.Arcade.Sprite {
     }
 
     openFights(scene) {
-        console.log('Arena opened - In process...');
-        // TODO: Implement fights system
+        if (scene.arenaSystem) {
+            scene.arenaSystem.open();
+        }
     }
 }

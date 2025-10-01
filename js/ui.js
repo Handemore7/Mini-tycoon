@@ -238,7 +238,12 @@ class UI {
         // Update player name and health bar positions
         if (this.scene.player && this.playerNameText) {
             this.playerNameText.setPosition(this.scene.player.x, this.scene.player.y - 30);
-            this.healthBarBg.setPosition(this.scene.player.x - 25, this.scene.player.y + 25);
+            
+            // Redraw health bar background at new position
+            this.healthBarBg.clear();
+            this.healthBarBg.fillStyle(0x000000, 0.8)
+                .fillRect(this.scene.player.x - 25, this.scene.player.y + 25, 50, 8);
+            
             this.updateHealthBar();
         } else if (this.scene.player && !this.playerNameText) {
             this.createPlayerUI();

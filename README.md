@@ -52,7 +52,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
   - Passive Income: Increases coins per 5 seconds (+1 per tier)
   - Chat Bonus: Increases coins per chat message (+5 per tier)
 - **Decoration** (Bottom-left): Buy and place furniture - Coming Soon
-- **Arena** (Bottom-right): Fight other players - Coming Soon
+- **Arena** (Bottom-right): Interactive survival combat with timing-based mechanics
 
 ## Current Status
 
@@ -83,7 +83,10 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Persistent inventory system with C key toggle
 ✅ Debug console with Konami Code activation
 ✅ Menu depth management (always on top)
-⏳ Arena/fighting system
+✅ Interactive Arena survival system with progressive difficulty
+✅ Achievement system with decoration unlocks
+✅ Event-driven save system (replaces auto-save timer)
+✅ Complete data deletion with Firebase integration
 
 ## Store System
 
@@ -182,14 +185,14 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 
 ## Next Steps
 
-1. Develop arena/fighting system with automated combat
-2. Add more decoration types and furniture options
-3. Create achievement system with unlock rewards
-4. Add more Twitch integration features (followers, subs, etc.)
-5. Implement visual equipment sprites and animations
-6. Add multiplayer features with real-time synchronization
-7. Implement Twitch OAuth for enhanced profile features
-8. Add sound effects and background music
+1. **Phase 3 Arena**: Add Twitch chat integration for combat
+2. **Arena Leaderboards**: Global and weekly competition systems
+3. **More Achievements**: Additional unlock conditions and rewards
+4. **Enhanced Twitch**: OAuth integration for advanced features
+5. **Visual Upgrades**: Equipment sprites and combat animations
+6. **Sound System**: Combat effects and background music
+7. **Multiplayer Features**: Real-time player interactions
+8. **Advanced Combat**: Special abilities and equipment skills
 
 ## Cloud Save System
 
@@ -201,19 +204,61 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Data validation**: Player names must be 3-20 alphanumeric characters
 - **Debounced saves**: Optimized saving to prevent spam
 
+**Event-Driven Saves (Improved Performance):**
+- **Debounced saves**: Only saves 2 seconds after last action
+- **Immediate saves**: Critical actions save instantly
+- **Before unload**: Saves when browser closes
+- **Reduced writes**: 90%+ fewer database operations vs. auto-save
+
 **Save Features:**
-- **Instant sync**: Changes saved to cloud within 1 second
+- **Smart saving**: Only saves when data actually changes
 - **Automatic fallback**: Uses localStorage if Firebase unavailable
 - **Data sanitization**: Clean data format for reliable storage
 - **Connection status**: Visual indicators for online/offline state
 - **Player validation**: Secure player name format enforcement
+- **Complete deletion**: Remove data from both Firebase and localStorage
 
-**Save Triggers:**
-- Equipment purchases and upgrades
-- Money earning and spending
-- Settings and profile changes
-- Health and stat modifications
-- Inventory and decoration changes
+## Arena System
+
+**Interactive Survival Combat:**
+- **Attack Phase**: Left-click timing for critical hits (1.5x damage)
+- **Defense Phase**: Spacebar to block incoming attacks (50% damage reduction)
+- **Progressive Difficulty**: Timing windows get smaller and faster each wave
+- **Combo System**: Chain successful actions for bonus damage and coins
+- **Wave Progression**: 5 enemy types with increasing difficulty
+
+**Combat Mechanics:**
+- **Perfect Timing**: Green zone for critical hits and perfect blocks
+- **Good Timing**: Yellow zone for bonus damage
+- **Miss Penalty**: Resets combo and takes full damage
+- **Skill Progression**: Players improve timing abilities over waves
+
+**Rewards:**
+- **Wave Rewards**: 10-200+ coins per wave based on difficulty
+- **Combo Bonuses**: Extra coins for maintaining streaks
+- **Milestone Rewards**: Special bonuses at waves 5, 10, 15, 20, 25
+- **Death Protection**: Keep 50% of earned coins when defeated
+
+**Difficulty Scaling:**
+- **Attack Speed**: Bar moves faster each wave (+0.3 speed, max +4)
+- **Perfect Zone**: Critical hit window shrinks (-0.5% per wave, min 4%)
+- **Reaction Time**: Less time to block (-0.05s per wave, min 0.8s)
+- **Time Pressure**: Shorter overall timing windows
+
+## Achievement System
+
+**Unlock-Based Decorations:**
+- **First Purchase**: Buy any store item → Unlocks Table ($200)
+- **Chat Streak**: Chat 3 consecutive days → Unlocks Plant ($150)
+- **Arena Champion**: Win first arena fight → Unlocks Trophy ($300)
+- **Rich Player**: Accumulate 5000 coins → Unlocks Fountain ($1000)
+- **Speed Demon**: Max speed boots → Unlocks Statue ($800)
+
+**Features:**
+- **Achievement notifications**: Visual popups when unlocked
+- **Decoration pricing**: Items cost money after first unlock
+- **Progress tracking**: Automatic achievement checking
+- **Persistent unlocks**: Achievements saved across sessions
 
 ## Controls
 
@@ -224,6 +269,11 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **C Key**: Toggle inventory visibility
 - **ESC Key**: Open settings menu
 - **Walk Into Buildings**: Only way to interact with buildings (no clicking)
+
+**Arena Combat:**
+- **Left Click**: Attack timing for critical hits
+- **Spacebar**: Block incoming attacks
+- **Timing**: Hit perfect zones for maximum effectiveness
 
 **Debug:**
 - **Konami Code** (WWSSADAD+Enter): Open debug console

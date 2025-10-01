@@ -23,6 +23,7 @@ class GameData {
         this.arenaWins = 0;
         this.decorationInventory = {};
         this.healthPotions = 0;
+        this.bestArenaWave = 0;
         
         // Load saved data if available
         this.loadGame();
@@ -87,6 +88,7 @@ class GameData {
         this.arenaWins = saveData.arenaWins || 0;
         this.decorationInventory = saveData.decorationInventory || {};
         this.healthPotions = saveData.healthPotions || 0;
+        this.bestArenaWave = saveData.bestArenaWave || 0;
     }
 
     async save() {
@@ -122,7 +124,8 @@ class GameData {
             lastChatDate: this.lastChatDate || null,
             arenaWins: this.arenaWins || 0,
             decorationInventory: this.decorationInventory || {},
-            healthPotions: this.healthPotions || 0
+            healthPotions: this.healthPotions || 0,
+            bestArenaWave: this.bestArenaWave || 0
         };
     }
 
