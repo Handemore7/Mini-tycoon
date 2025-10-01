@@ -547,16 +547,41 @@ class Arena {
         };
         window.addEventListener('beforeunload', this.beforeUnloadHandler);
         
+        // Don't pause physics - allow movement
+        this.arenaPosition = { x: this.scene.fightsBuilding.x, y: this.scene.fightsBuilding.y };
+        
+        // Start distance checking
+        this.updateInterval = setInterval(() => {
+            if (this.isOpen) {
+                this.checkPlayerDistance();
+            }
+        }, 100);
+        
         this.updateDisplay();
         this.elements.forEach(element => {
             element.setVisible(true);
             element.setDepth(3000);
         });
         
-        this.scene.physics.pause();
-        
         // Save when opening arena
         if (gameData?.save) gameData.save();
+    }
+    
+    checkPlayerDistance() {
+        if (!this.scene.player || !this.arenaPosition) return;
+        
+        // Don't close if in active combat
+        if (this.isInActiveCombat()) return;
+        
+        const distance = Phaser.Math.Distance.Between(
+            this.scene.player.x, this.scene.player.y,
+            this.arenaPosition.x, this.arenaPosition.y
+        );
+        
+        // Close arena if player is more than 120 pixels away and not in combat
+        if (distance > 120) {
+            this.close();
+        }
     }
 
     close() {
@@ -678,10 +703,16 @@ class Arena {
         this.hideAttackUI();
         this.hideDefenseUI();
         
+        // Stop distance checking
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+        
         this.resetDungeon();
         this.elements.forEach(element => element.setVisible(false));
         
-        this.scene.physics.resume();
+        // Physics already running, no need to resume
         this.addCloseCooldown();
     }
 

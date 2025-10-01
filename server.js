@@ -45,12 +45,22 @@ io.on('connection', (socket) => {
     // Handle vote submission
     socket.on('submit_vote', (data) => {
         const { eventId, option, playerId } = data;
-        console.log('🗳️ Server: Vote received from', playerId, 'for option', option, 'in event', eventId);
+        
+        // Validate input
+        if (!eventId || typeof option !== 'number' || !playerId || typeof playerId !== 'string') {
+            console.log('❌ Server: Invalid vote data received');
+            return;
+        }
+        
+        // Sanitize playerId
+        const sanitizedPlayerId = playerId.replace(/[<>"'&]/g, '');
+        
+        console.log('🗳️ Server: Vote received from', sanitizedPlayerId, 'for option', option, 'in event', eventId);
         
         const vote = activeVotes.get(eventId);
         
-        if (vote && !vote.voters.has(playerId)) {
-            vote.voters.add(playerId);
+        if (vote && !vote.voters.has(sanitizedPlayerId)) {
+            vote.voters.add(sanitizedPlayerId);
             vote.results[option] = (vote.results[option] || 0) + 1;
             
             console.log('✅ Server: Vote counted. New results:', vote.results);
@@ -58,8 +68,8 @@ io.on('connection', (socket) => {
             // Broadcast updated results to all players
             io.emit('vote_update', { eventId, results: vote.results });
             console.log('📊 Server: Broadcasting vote update to all players');
-        } else if (vote && vote.voters.has(playerId)) {
-            console.log('❌ Server: Player', playerId, 'already voted in', eventId);
+        } else if (vote && vote.voters.has(sanitizedPlayerId)) {
+            console.log('❌ Server: Player', sanitizedPlayerId, 'already voted in', eventId);
         } else {
             console.log('❌ Server: Vote not found:', eventId);
         }
@@ -73,7 +83,20 @@ io.on('connection', (socket) => {
 
 // Event triggers (for testing)
 app.post('/trigger-event', (req, res) => {
+    // Basic CSRF protection - check origin
+    const origin = req.get('Origin');
+    const allowedOrigins = ['http://localhost:3000', 'http://localhost:8080', 'https://yourdomain.com'];
+    
+    if (origin && !allowedOrigins.includes(origin)) {
+        return res.status(403).json({ error: 'Forbidden origin' });
+    }
+    
     const { type, data } = req.body;
+    
+    // Validate input
+    if (!type || typeof type !== 'string') {
+        return res.status(400).json({ error: 'Invalid event type' });
+    }
     
     // Check for overlapping events (except for manual debug triggers)
     if (hasActiveEvents()) {

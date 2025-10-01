@@ -126,6 +126,11 @@ class UI {
         
         for (const url of methods) {
             try {
+                // Validate URL before making request
+                if (!this.isValidTwitchUrl(url)) {
+                    continue;
+                }
+                
                 const response = await fetch(url);
                 if (response.ok) {
                     const data = await response.text();
@@ -158,6 +163,10 @@ class UI {
         
         for (const url of possibleUrls) {
             try {
+                if (!this.isValidTwitchUrl(url)) {
+                    continue;
+                }
+                
                 const response = await fetch(url, { method: 'HEAD' });
                 if (response.ok) {
                     return url;
@@ -168,6 +177,22 @@ class UI {
         }
         
         return null;
+    }
+    
+    isValidTwitchUrl(url) {
+        const allowedDomains = [
+            'decapi.me',
+            'api.twitch.tv',
+            'twitchtracker.com',
+            'static-cdn.jtvnw.net'
+        ];
+        
+        try {
+            const urlObj = new URL(url);
+            return allowedDomains.some(domain => urlObj.hostname.endsWith(domain));
+        } catch {
+            return false;
+        }
     }
     
     loadProfileImage(username, profileUrl) {

@@ -4,19 +4,19 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 
 ## 🎮 Core Features
 
-- **Character Movement**: 8-directional movement with smooth animations
+- **Character Movement**: 8-directional movement with smooth animations and walk-away store closing
 - **Economy System**: Multi-source income (passive + Twitch chat + arena rewards)
-- **4 Interactive Buildings**: Store, Upgrades, Decorations, Arena
-- **Turn-Based Combat**: 20-floor dungeon with D&D-style mechanics
-- **Twitch Integration**: Real-time chat monitoring with profile pictures
-- **Cloud Save System**: Firebase Firestore with comprehensive data persistence
+- **4 Interactive Buildings**: Store, Upgrades, Decorations, Arena with movement-based interaction
+- **Turn-Based Combat**: 20-floor dungeon with D&D-style mechanics and combat protection
+- **Twitch Integration**: Real-time chat monitoring with profile pictures and secure validation
+- **Cloud Save System**: Firebase Firestore with comprehensive data persistence and security
 - **Achievement System**: Unlock decorations through gameplay milestones
 - **Inventory Management**: Persistent equipment and decoration storage
-- **Interactive Tutorial**: 7-step guided tutorial for new players
-- **Modern Store UI**: Card-based interface with real-time updates
+- **Interactive Tutorial**: 7-step guided tutorial with X key skip option
+- **Modern Store UI**: Card-based interface with real-time updates and movement freedom
 - **Audio System**: Dynamic background music with arena switching
-- **Loading Screen**: Professional loading experience with progress tracking
-- **Debug Console**: Advanced debugging with system monitoring
+- **Smart Loading Screen**: Context-aware loading with error handling and recovery
+- **Enhanced Debug Console**: Comprehensive debugging with error handling and system monitoring
 
 ## 🏗️ Enterprise Architecture
 
@@ -24,12 +24,14 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 - Centralized state with validation and rate limiting
 - Event-driven architecture with subscriber pattern
 - Backward compatibility with legacy gameData
-- Import/export functionality for save systems
+- Import/export functionality with data sanitization
 
-### **Error Logging & Monitoring**
-- Multi-level logging (ERROR, WARN, INFO, DEBUG)
-- Performance metrics tracking and analysis
-- Global error capture for unhandled exceptions
+### **Security & Error Handling**
+- Multi-level logging (ERROR, WARN, INFO, DEBUG) with sanitization
+- XSS prevention with input validation and HTML escaping
+- CSRF protection with origin validation
+- SSRF prevention with URL whitelisting
+- Global error capture with user-friendly recovery options
 - Export functionality for debugging and analytics
 
 ### **Memory Management**
@@ -45,10 +47,10 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 - Fallback handling for missing assets
 
 ### **Testing Framework**
-- Unit testing with describe/it/expect syntax
+- Unit testing with describe/it/expect syntax with error sanitization
 - Mock utilities for game component testing
 - Auto-run in development mode
-- Comprehensive assertion library
+- Comprehensive assertion library with security validation
 
 ## 🛠️ Setup & Configuration
 
@@ -78,10 +80,11 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 
 ### **Getting Started**
 1. **Launch Game**: Open `index.html` in a web browser
-2. **Tutorial**: Follow the 7-step interactive tutorial for new players
+2. **Tutorial**: Follow the 7-step interactive tutorial (skip with X key)
 3. **Create Profile**: Enter player name (3-20 chars) and optional Twitch streamer
 4. **Learn Controls**: WASD/arrows to move, walk into buildings to interact
-5. **Earn Money**: Passive income (1 coin/5s) + Twitch chat rewards (10 coins/message)
+5. **Store Interaction**: Walk into buildings to open, walk away or click X to close
+6. **Earn Money**: Passive income (1 coin/5s) + Twitch chat rewards (10 coins/message)
 
 ### **Interactive Tutorial (7 Steps)**
 1. **Movement**: Learn WASD/arrow key controls
@@ -91,6 +94,11 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 5. **Arena**: Try turn-based combat (bottom-right building)
 6. **Inventory**: Press C to toggle inventory panel
 7. **Complete**: Tutorial finished, explore freely!
+
+**Tutorial Controls:**
+- **X Key**: Skip tutorial at any time
+- **ESC Key**: Open settings menu
+- **Walk Away**: Close any open store by walking away from the building
 
 ### **Progression Path**
 1. **Store**: Buy tiered equipment with modern card-based interface
@@ -159,8 +167,15 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
   - Speed Boots: Increases movement speed (+20 per tier)
   - Passive Income: Increases coins per 5 seconds (+1 per tier)
   - Chat Bonus: Increases coins per chat message (+5 per tier)
-- **Decoration** (Bottom-left): Buy and place furniture - Coming Soon
-- **Dungeon** (Bottom-right): D&D-style turn-based combat with 20 floors
+- **Decoration** (Bottom-left): Buy and place achievement-unlocked furniture
+- **Arena** (Bottom-right): D&D-style turn-based combat with 20 floors
+
+### **Building Interaction**
+- **Walk Into**: Touch buildings to open their interfaces
+- **Walk Away**: Automatically closes when you move >120 pixels away
+- **Click X**: Manual close button in top-right of each interface
+- **Movement Freedom**: Character can move while stores are open
+- **Combat Protection**: Arena won't auto-close during active combat
 
 ## ✅ Implementation Status
 
@@ -458,9 +473,17 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 
 ### **Movement & Navigation**
 - **WASD** or **Arrow Keys**: 8-directional character movement
-- **Walk Into Buildings**: Touch-based interaction (no clicking required)
+- **Walk Into Buildings**: Touch-based interaction opens stores
+- **Walk Away**: Auto-close stores when >120 pixels from building
 - **C Key**: Toggle inventory panel visibility
 - **ESC Key**: Open settings menu with interactive volume slider
+
+### **Store Interaction**
+- **Two Ways to Close**: Click X button OR walk away from building
+- **Movement Freedom**: Character can move while any store is open
+- **Distance Threshold**: 120 pixels - close enough to feel connected, far enough for movement
+- **Combat Protection**: Arena won't auto-close during active fights
+- **Smooth Experience**: No physics interruption or jarring pauses
 
 ### **Audio Controls**
 - **Dynamic Music**: Background music switches between normal and arena themes
@@ -477,19 +500,26 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 - **Exit Protection**: Confirmation dialog prevents accidental progress loss during combat
 - **Page Close Warning**: Browser prevents tab closure during active combat
 
+### **Tutorial Controls**
+- **X Key**: Skip tutorial at any time (changed from ESC)
+- **TAB Key**: Switch between input fields in profile creation
+- **ENTER Key**: Confirm profile creation and continue
+- **Auto-Progression**: Tutorial advances automatically when actions are completed
+
 ### **WebSocket Event Controls**
 - **Coin Collection**: Click coins or walk into them during Coin Rain events (+5 each)
 - **Vote Participation**: Real-time voting with live result updates
 - **Notification Management**: "−" button to minimize, bouncing arrow to restore
 - **Arena Integration**: Events auto-minimize during combat, Critical Madness shows usage status
 
-### **Debug & Development**
-- **Konami Code** (WWSSADAD+Enter): Advanced debug console with WebSocket event triggers
-- **Event Testing**: Trigger all 4 events with overlap prevention feedback
-- **Arena Protection**: Exit confirmation during active combat, page close warnings
-- **System Monitor**: Performance and memory tracking with comprehensive logging
-- **Test Runner**: Automated testing suite with WebSocket integration
-- **Error Export**: Download logs for debugging with WebSocket event tracking
+### **Enhanced Debug Console**
+- **Konami Code** (WWSSADAD+Enter): Advanced debug console with error handling
+- **5 Organized Rows**: Money/Health, Equipment/Stats, Advanced Stats, System/Utility, WebSocket Events
+- **Error Display**: Red error messages with auto-hide after 5 seconds
+- **Hover Effects**: Visual feedback on all buttons
+- **System Tools**: Memory cleanup, log export, test runner, connection testing
+- **WebSocket Testing**: Trigger all 4 events with overlap prevention feedback
+- **Safety Features**: Confirmation dialogs for destructive actions
 
 ### **Inventory Management**
 - **2x6 Grid**: 12 slots for equipment and decorations
@@ -575,25 +605,36 @@ window.errorLogger.exportLogs();
 // Includes overlap prevention and arena integration testing
 ```
 
+### **Enhanced Debug Console**
+- **5 Organized Button Rows**: Logical grouping by functionality
+- **Error Handling**: All actions wrapped in try-catch with user feedback
+- **Visual Feedback**: Hover effects and success/error messages
+- **System Tools**: Memory cleanup, log export, test runner, data management
+- **WebSocket Testing**: All 4 events with connection validation
+- **Safety Features**: Confirmation dialogs for destructive operations
+
 ### **System Monitoring**
 - **Memory Usage**: Real-time tracking with cleanup triggers
 - **Performance Metrics**: Save frequency, load times, frame rates
-- **Error Tracking**: Comprehensive logging with export functionality
+- **Error Tracking**: Comprehensive logging with sanitization and export
 - **State Validation**: Automatic data validation and sanitization
+- **Security Monitoring**: XSS/CSRF/SSRF prevention tracking
 
 ### **Debug Console Commands**
 ```javascript
 // Access via Konami Code: WWSSADAD+Enter
-// Or browser console (F12):
+// Enhanced with error handling and security validation
+
+// Browser console (F12) - all commands now sanitized:
 gameData.money = 999999;          // Set money
 gameData.stats.health = 100;      // Set health
 window.stateManager.addMoney(1000); // Add money with validation
 window.memoryManager.forceCleanup(); // Emergency cleanup
-window.testFramework.runTests();   // Run all tests
+window.testFramework.runTests();   // Run all tests with error sanitization
 
-// WebSocket event testing
-// Debug Console → Coin Rain, Speed Challenge, Critical Madness, Server Vote
-// Includes overlap prevention and arena integration
+// WebSocket event testing with security validation
+// Debug Console → Row 5: Coin Rain, Speed Challenge, Critical Madness, Server Vote
+// All events include overlap prevention, arena integration, and error handling
 ```
 
 ## 🎯 Next Steps
@@ -637,4 +678,4 @@ window.testFramework.runTests();   // Run all tests
 - ✅ **Tutorial Protection**: Events blocked until user is ready
 
 ### **Deployment Score: 10/10**
-Production-ready with enterprise-level architecture, comprehensive error handling, automated testing, professional monitoring systems, interactive tutorial, modern UI design, real-time WebSocket event system with smart voting, arena exit protection, complete combat state management, professional loading screen, and dynamic audio system with interactive controls.
+Production-ready with enterprise-level architecture, comprehensive security measures (XSS/CSRF/SSRF prevention), automated testing, professional monitoring systems, interactive tutorial with X-key skip, modern UI design with movement-based interaction, real-time WebSocket event system with smart voting, arena exit protection, complete combat state management, context-aware loading screen with error recovery, enhanced debug console with error handling, and dynamic audio system with interactive controls.

@@ -154,7 +154,12 @@ class SaveSystem {
         try {
             const saveData = localStorage.getItem('miniTycoonSave');
             if (saveData) {
-                const blob = new Blob([saveData], { type: 'application/json' });
+                // Sanitize save data before export
+                const parsedData = JSON.parse(saveData);
+                const sanitizedData = this.sanitizeSaveData(parsedData);
+                const sanitizedJson = JSON.stringify(sanitizedData);
+                
+                const blob = new Blob([sanitizedJson], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -168,6 +173,18 @@ class SaveSystem {
         }
         return false;
     }
+    
+    sanitizeSaveData(data) {
+        const sanitized = JSON.parse(JSON.stringify(data));
+        // Remove any potentially dangerous properties
+        if (sanitized.playerName) {
+            sanitized.playerName = sanitized.playerName.replace(/[<>"'&]/g, '');
+        }
+        if (sanitized.twitchStreamer) {
+            sanitized.twitchStreamer = sanitized.twitchStreamer.replace(/[<>"'&]/g, '');
+        }
+        return sanitized;
+    }
 
     // Import save data from file
     importSave(file) {
@@ -176,8 +193,14 @@ class SaveSystem {
             reader.onload = (e) => {
                 try {
                     const saveData = JSON.parse(e.target.result);
-                    localStorage.setItem('miniTycoonSave', JSON.stringify(saveData));
-                    this.applySaveData(saveData);
+                    // Validate and sanitize imported data
+                    const sanitizedData = this.validateImportData(saveData);
+                    if (!sanitizedData) {
+                        reject(new Error('Invalid save file format'));
+                        return;
+                    }
+                    localStorage.setItem('miniTycoonSave', JSON.stringify(sanitizedData));
+                    this.applySaveData(sanitizedData);
                     resolve(true);
                 } catch (error) {
                     reject(error);
@@ -185,6 +208,37 @@ class SaveSystem {
             };
             reader.readAsText(file);
         });
+    }
+    
+    validateImportData(data) {
+        // Basic validation of save file structure
+        if (!data || typeof data !== 'object') return null;
+        
+        // Sanitize string fields
+        const sanitized = {
+            version: data.version || '1.0',
+            timestamp: Date.now(),
+            playerName: (data.playerName || '').replace(/[<>"'&]/g, '').substring(0, 20),
+            twitchStreamer: (data.twitchStreamer || 'Handemore7').replace(/[<>"'&]/g, '').substring(0, 25),
+            volume: Math.max(0, Math.min(1, parseFloat(data.volume) || 0.5)),
+            money: Math.max(0, parseInt(data.money) || 100),
+            stats: data.stats || {},
+            inventory: data.inventory || {},
+            decorations: Array.isArray(data.decorations) ? data.decorations : [],
+            upgrades: data.upgrades || {},
+            passiveIncome: Math.max(1, parseInt(data.passiveIncome) || 1),
+            chatBonus: Math.max(10, parseInt(data.chatBonus) || 10),
+            chatStreak: Math.max(0, parseInt(data.chatStreak) || 0),
+            lastChatDate: data.lastChatDate || null,
+            arenaWins: Math.max(0, parseInt(data.arenaWins) || 0),
+            decorationInventory: data.decorationInventory || {},
+            healthPotions: Math.max(0, parseInt(data.healthPotions) || 0),
+            bestArenaWave: Math.max(0, parseInt(data.bestArenaWave) || 0),
+            playerPosition: data.playerPosition || { x: 400, y: 300 },
+            achievements: data.achievements || {}
+        };
+        
+        return sanitized;
     }
 
     // Get save info for display

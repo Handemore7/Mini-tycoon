@@ -484,16 +484,33 @@ class Decorations {
             element.setVisible(true);
             element.setDepth(3000);
         });
-        this.scene.physics.pause();
         
-        // Start real-time updates
+        // Don't pause physics - allow movement
+        this.decorationPosition = { x: this.scene.decorationBuilding.x, y: this.scene.decorationBuilding.y };
+        
+        // Start real-time updates and distance checking
         this.updateInterval = setInterval(() => {
             if (this.isOpen) {
                 this.updateMoneyDisplay();
+                this.checkPlayerDistance();
             }
         }, 100);
         
         if (gameData?.save) gameData.save();
+    }
+    
+    checkPlayerDistance() {
+        if (!this.scene.player || !this.decorationPosition) return;
+        
+        const distance = Phaser.Math.Distance.Between(
+            this.scene.player.x, this.scene.player.y,
+            this.decorationPosition.x, this.decorationPosition.y
+        );
+        
+        // Close decorations if player is more than 120 pixels away
+        if (distance > 120) {
+            this.close();
+        }
     }
 
     close() {
@@ -507,7 +524,7 @@ class Decorations {
         
         this.elements.forEach(element => element.setVisible(false));
         if (this.message) this.message.destroy();
-        this.scene.physics.resume();
+        // Physics already running, no need to resume
         
         this.addCloseCooldown();
     }

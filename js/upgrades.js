@@ -291,16 +291,33 @@ class Upgrades {
             element.setVisible(true);
             element.setDepth(3000);
         });
-        this.scene.physics.pause();
         
-        // Start real-time updates
+        // Don't pause physics - allow movement
+        this.upgradesPosition = { x: this.scene.upgradesBuilding.x, y: this.scene.upgradesBuilding.y };
+        
+        // Start real-time updates and distance checking
         this.updateInterval = setInterval(() => {
             if (this.isOpen) {
                 this.updateMoneyDisplay();
+                this.checkPlayerDistance();
             }
         }, 100);
         
         if (gameData?.save) gameData.save();
+    }
+    
+    checkPlayerDistance() {
+        if (!this.scene.player || !this.upgradesPosition) return;
+        
+        const distance = Phaser.Math.Distance.Between(
+            this.scene.player.x, this.scene.player.y,
+            this.upgradesPosition.x, this.upgradesPosition.y
+        );
+        
+        // Close upgrades if player is more than 120 pixels away
+        if (distance > 120) {
+            this.close();
+        }
     }
 
     close() {
@@ -316,7 +333,7 @@ class Upgrades {
         if (this.purchaseMessage) {
             this.purchaseMessage.destroy();
         }
-        this.scene.physics.resume();
+        // Physics already running, no need to resume
         
         this.addCloseCooldown();
     }

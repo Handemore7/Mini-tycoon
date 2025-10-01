@@ -157,11 +157,11 @@ class WebSocketManager {
         voteContainer.innerHTML = `
             <div class="vote-popup">
                 <h3>🗳️ Votación del Servidor</h3>
-                <p>${question}</p>
+                <p>${this.sanitizeHTML(question)}</p>
                 <div class="vote-options">
                     ${options.map((option, index) => `
                         <button class="vote-btn" data-option="${index}">
-                            ${option.name} <span class="vote-count">(${initialResults[index] || 0})</span>
+                            ${this.sanitizeHTML(option.name)} <span class="vote-count">(${initialResults[index] || 0})</span>
                         </button>
                     `).join('')}
                 </div>
@@ -243,13 +243,13 @@ class WebSocketManager {
         summary.innerHTML = `
             <div class="vote-summary-popup">
                 <div class="summary-header">
-                    <h4>🗳️ ${question}</h4>
+                    <h4>🗳️ ${this.sanitizeHTML(question)}</h4>
                     <button class="expand-btn" onclick="window.webSocketManager.showVoteSummary()">▲</button>
                 </div>
                 <div class="vote-results" id="vote-results-${eventId}">
                     ${options.map((option, index) => `
                         <div class="result-item">
-                            <span>${option.name}:</span>
+                            <span>${this.sanitizeHTML(option.name)}:</span>
                             <span class="vote-count" data-option="${index}">0</span>
                         </div>
                     `).join('')}
@@ -554,10 +554,16 @@ class WebSocketManager {
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
-        notification.textContent = message;
+        notification.textContent = this.sanitizeHTML(message);
         document.body.appendChild(notification);
         
         setTimeout(() => notification.remove(), 4000);
+    }
+    
+    sanitizeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     // EVENT NOTIFICATION SYSTEM
@@ -572,10 +578,10 @@ class WebSocketManager {
         container.innerHTML = `
             <div class="event-content">
                 <div class="event-header">
-                    <h3>${title}</h3>
+                    <h3>${this.sanitizeHTML(title)}</h3>
                     <button class="hide-btn" onclick="window.webSocketManager.hideEventNotification()">−</button>
                 </div>
-                <p>${description}</p>
+                <p>${this.sanitizeHTML(description)}</p>
                 ${duration ? `<div class="progress-container">
                     <div class="progress-bar" id="event-progress"></div>
                     <span class="time-left" id="event-time"></span>

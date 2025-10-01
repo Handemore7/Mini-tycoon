@@ -129,8 +129,8 @@ class TestFramework {
             result.passed = true;
             console.log(`  ✅ ${test.name}`);
         } catch (error) {
-            result.error = error.message;
-            console.log(`  ❌ ${test.name}: ${error.message}`);
+            result.error = this.sanitizeErrorMessage(error.message);
+            console.log(`  ❌ ${test.name}: ${result.error}`);
         }
 
         result.duration = performance.now() - startTime;
@@ -150,7 +150,7 @@ class TestFramework {
         if (failed > 0) {
             console.log(`\n💥 Failed Tests:`);
             this.results.filter(r => !r.passed).forEach(result => {
-                console.log(`  ${result.suite} > ${result.name}: ${result.error}`);
+                console.log(`  ${result.suite} > ${result.name}: ${this.sanitizeErrorMessage(result.error)}`);
             });
         }
     }
@@ -189,6 +189,14 @@ class TestFramework {
         };
         
         return obj[method];
+    }
+    
+    sanitizeErrorMessage(message) {
+        if (typeof message !== 'string') return 'Unknown error';
+        return message.replace(/[<>"'&]/g, (match) => {
+            const entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
+            return entities[match];
+        });
     }
 }
 
