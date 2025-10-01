@@ -1,7 +1,10 @@
 // Public configuration - Safe for client-side use
+// Firebase API keys are designed to be public (not secrets)
+// Security is handled by Firestore rules, not API key secrecy
+// See: https://firebase.google.com/docs/projects/api-keys
 const CONFIG = {
   firebase: {
-    apiKey: "AIzaSyDmHkfBnnQJ8FpZXoerd-7tRAZcid_XHEE",
+    apiKey: "AIzaSyDmHkfBnnQJ8FpZXoerd-7tRAZcid_XHEE", // Public Firebase identifier
     authDomain: "mini-tycoon.firebaseapp.com",
     projectId: "mini-tycoon",
     storageBucket: "mini-tycoon.firebasestorage.app",
