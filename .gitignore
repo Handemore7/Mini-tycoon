@@ -1,0 +1,21 @@
+# Credentials and sensitive files
+js/config.js
+config.js
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/
+
+# Build files
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
