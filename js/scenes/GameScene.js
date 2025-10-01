@@ -315,6 +315,22 @@ class GameScene extends Phaser.Scene {
         this.upgradesBuilding = new Building(this, 700, 100, 'upgrades', 'UPGRADES');
         this.decorationBuilding = new Building(this, 100, 500, 'decoration', 'DECORATION');
         this.fightsBuilding = new Building(this, 700, 500, 'fights', 'ARENA');
+        
+        // Show cleared status if arena was completed
+        if (gameData.arenaCompleted) {
+            this.arenaClearedText = this.add.text(
+                this.fightsBuilding.x, 
+                this.fightsBuilding.y - 50, 
+                'CLEARED', 
+                {
+                    fontSize: '14px',
+                    fill: '#00ff00',
+                    backgroundColor: '#000000',
+                    padding: { x: 8, y: 4 },
+                    fontWeight: 'bold'
+                }
+            ).setOrigin(0.5).setDepth(1000);
+        }
 
         // Create UI
         this.ui = new UI(this);
@@ -409,6 +425,7 @@ class GameScene extends Phaser.Scene {
         
         // Initialize tutorial for new players
         this.tutorial = new Tutorial(this);
+        window.Tutorial.instance = this.tutorial; // Global reference
         this.tutorial.start();
     }
 

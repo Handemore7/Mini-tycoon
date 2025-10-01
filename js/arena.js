@@ -297,14 +297,39 @@ class Arena {
             gameData.bestArenaWave = this.currentFloor;
         }
         
+        // Mark arena as completed
+        gameData.arenaCompleted = true;
+        
         if (gameData?.save) gameData.save();
+        
+        // Show cleared status on building
+        this.showClearedStatus();
+        
         if (window.memoryManager) {
             window.memoryManager.createTimer(this.scene, {
                 delay: 3000,
-                callback: () => this.close()
+                callback: () => this.forceClose()
             });
         } else {
-            this.scene.time.delayedCall(3000, () => this.close());
+            this.scene.time.delayedCall(3000, () => this.forceClose());
+        }
+    }
+    
+    showClearedStatus() {
+        // Add "CLEARED" text above arena building
+        if (this.scene.fightsBuilding && !this.scene.arenaClearedText) {
+            this.scene.arenaClearedText = this.scene.add.text(
+                this.scene.fightsBuilding.x, 
+                this.scene.fightsBuilding.y - 50, 
+                'CLEARED', 
+                {
+                    fontSize: '14px',
+                    fill: '#00ff00',
+                    backgroundColor: '#000000',
+                    padding: { x: 8, y: 4 },
+                    fontWeight: 'bold'
+                }
+            ).setOrigin(0.5).setDepth(1000);
         }
     }
 
@@ -312,6 +337,27 @@ class Arena {
         // Reset critical madness on death
         if (window.webSocketManager) {
             window.webSocketManager.resetCriticalMadness();
+        }
+        
+        // Force reset all combat states on death
+        this.turnState = 'waiting';
+        this.criticalSuccess = false;
+        this.criticalBarPosition = 0;
+        this.criticalBarDirection = 1;
+        this.criticalInputEnabled = false;
+        this.attackProgress = 0;
+        this.attackClicked = false;
+        this.defenseTimeLeft = 0;
+        this.dodgeClicked = false;
+        
+        // Clean up timers
+        if (this.attackTimer) {
+            this.attackTimer.destroy();
+            this.attackTimer = null;
+        }
+        if (this.defenseTimer) {
+            this.defenseTimer.destroy();
+            this.defenseTimer = null;
         }
         
         const coinsKept = Math.floor(this.totalCoinsEarned * 0.5);
@@ -339,10 +385,10 @@ class Arena {
         if (window.memoryManager) {
             window.memoryManager.createTimer(this.scene, {
                 delay: 3000,
-                callback: () => this.close()
+                callback: () => this.forceClose()
             });
         } else {
-            this.scene.time.delayedCall(3000, () => this.close());
+            this.scene.time.delayedCall(3000, () => this.forceClose());
         }
     }
 
@@ -373,7 +419,11 @@ class Arena {
         this.totalCoinsEarned = 0;
         this.currentEnemy = null;
         this.turnState = 'waiting';
-        this.combatSystem.statusEffects = { poisoned: 0, wounded: 0 };
+        
+        // Reset combat system status effects
+        if (this.combatSystem) {
+            this.combatSystem.statusEffects = { poisoned: 0, wounded: 0 };
+        }
         
         // Clean up all timers and states
         if (this.attackTimer) {
@@ -385,11 +435,15 @@ class Arena {
             this.defenseTimer = null;
         }
         
-        // Reset critical attack state
+        // Reset ALL critical attack and defense states
         this.criticalSuccess = false;
         this.criticalBarPosition = 0;
         this.criticalBarDirection = 1;
         this.criticalInputEnabled = false;
+        this.attackProgress = 0;
+        this.attackClicked = false;
+        this.defenseTimeLeft = 0;
+        this.dodgeClicked = false;
         
         this.hideAttackUI();
         this.hideDefenseUI();
@@ -478,6 +532,16 @@ class Arena {
         this.spaceKey.on('down', this.dodgeInputHandler);
         this.scene.input.on('wheel', this.handleScroll, this);
         
+        // Add beforeunload protection
+        this.beforeUnloadHandler = (e) => {
+            if (this.isInActiveCombat()) {
+                e.preventDefault();
+                e.returnValue = 'You are in active combat! All progress will be lost if you leave.';
+                return e.returnValue;
+            }
+        };
+        window.addEventListener('beforeunload', this.beforeUnloadHandler);
+        
         this.updateDisplay();
         this.elements.forEach(element => {
             element.setVisible(true);
@@ -491,7 +555,79 @@ class Arena {
     }
 
     close() {
+        // Check if player is in active combat
+        if (this.isInActiveCombat()) {
+            this.showExitConfirmation();
+            return;
+        }
+        
+        this.forceClose();
+    }
+    
+    isInActiveCombat() {
+        return this.currentEnemy && this.currentEnemy.health > 0 && this.currentFloor > 1;
+    }
+    
+    showExitConfirmation() {
+        // Create confirmation dialog
+        const confirmBg = this.scene.add.graphics()
+            .fillStyle(0x000000, 0.8)
+            .fillRect(0, 0, 800, 600)
+            .setDepth(4000);
+            
+        const confirmBox = this.scene.add.graphics()
+            .fillStyle(0x2c3e50, 0.95)
+            .fillRoundedRect(200, 200, 400, 200, 10)
+            .lineStyle(2, 0xe74c3c, 1)
+            .strokeRoundedRect(200, 200, 400, 200, 10)
+            .setDepth(4001);
+            
+        const confirmText = this.scene.add.text(400, 280, 'Leave Arena?\n\nAll progress will be lost!\nYou will restart from Floor 1.', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(4002);
+        
+        const yesBtn = this.scene.add.text(320, 350, 'YES, LEAVE', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0.5).setDepth(4002).setInteractive();
+        
+        const noBtn = this.scene.add.text(480, 350, 'STAY', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            backgroundColor: '#27ae60',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0.5).setDepth(4002).setInteractive();
+        
+        yesBtn.on('pointerdown', () => {
+            confirmBg.destroy();
+            confirmBox.destroy();
+            confirmText.destroy();
+            yesBtn.destroy();
+            noBtn.destroy();
+            this.forceClose();
+        });
+        
+        noBtn.on('pointerdown', () => {
+            confirmBg.destroy();
+            confirmBox.destroy();
+            confirmText.destroy();
+            yesBtn.destroy();
+            noBtn.destroy();
+        });
+    }
+    
+    forceClose() {
         this.isOpen = false;
+        
+        // Remove beforeunload protection
+        if (this.beforeUnloadHandler) {
+            window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+            this.beforeUnloadHandler = null;
+        }
         
         // Reset critical madness when leaving arena
         if (window.webSocketManager) {
@@ -512,12 +648,25 @@ class Arena {
             this.defenseTimer = null;
         }
         
-        // Reset combat system state
+        // Reset ALL combat system states
         this.turnState = 'waiting';
         this.criticalSuccess = false;
         this.criticalBarPosition = 0;
         this.criticalBarDirection = 1;
         this.criticalInputEnabled = false;
+        this.attackProgress = 0;
+        this.attackClicked = false;
+        this.defenseTimeLeft = 0;
+        this.dodgeClicked = false;
+        
+        // Reset combat system status effects
+        if (this.combatSystem) {
+            this.combatSystem.statusEffects = { poisoned: 0, wounded: 0 };
+        }
+        
+        // Hide all combat UI elements
+        this.hideAttackUI();
+        this.hideDefenseUI();
         
         this.resetDungeon();
         this.elements.forEach(element => element.setVisible(false));

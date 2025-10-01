@@ -25,6 +25,7 @@ class GameData {
         this.decorationInventory = {};
         this.healthPotions = 0;
         this.bestArenaWave = 0;
+        this.arenaCompleted = false;
         this.playerPosition = { x: 400, y: 300 };
         this.achievements = {};
         this.lastSaveTime = Date.now();
@@ -93,6 +94,7 @@ class GameData {
         this.decorationInventory = saveData.decorationInventory || {};
         this.healthPotions = saveData.healthPotions || 0;
         this.bestArenaWave = saveData.bestArenaWave || 0;
+        this.arenaCompleted = saveData.arenaCompleted || false;
         this.playerPosition = saveData.playerPosition || { x: 400, y: 300 };
         this.achievements = saveData.achievements || {};
         this.lastSaveTime = saveData.lastSaveTime || Date.now();
@@ -133,6 +135,7 @@ class GameData {
             decorationInventory: this.decorationInventory || {},
             healthPotions: this.healthPotions || 0,
             bestArenaWave: this.bestArenaWave || 0,
+            arenaCompleted: this.arenaCompleted || false,
             playerPosition: this.playerPosition || { x: 400, y: 300 },
             achievements: this.achievements || {},
             lastSaveTime: Date.now()

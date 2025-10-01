@@ -98,16 +98,16 @@ class WebSocketManager {
                 console.log(`✅ WebSocket: Showing event ${event.type} to late joiner`);
                 switch (event.type) {
                     case 'server_vote':
-                        this.handleServerVote({...event, duration: timeLeft});
+                        this.handleServerVote({...event, duration: timeLeft, originalDuration: event.duration});
                         break;
                     case 'coin_rain':
-                        this.handleCoinRain({...event, duration: timeLeft});
+                        this.handleCoinRain({...event, duration: timeLeft, originalDuration: event.duration});
                         break;
                     case 'critical_madness':
-                        this.handleCriticalMadness({...event, duration: timeLeft});
+                        this.handleCriticalMadness({...event, duration: timeLeft, originalDuration: event.duration});
                         break;
                     case 'speed_challenge':
-                        this.handleSpeedChallenge({...event, duration: timeLeft});
+                        this.handleSpeedChallenge({...event, duration: timeLeft, originalDuration: event.duration});
                         break;
                 }
             } else {
@@ -125,7 +125,7 @@ class WebSocketManager {
 
     // SERVER VOTE EVENT
     handleServerVote(data) {
-        const { eventId, question, options, duration = 20000, results = [] } = data;
+        const { eventId, question, options, duration = 20000, originalDuration, results = [] } = data;
         
         this.createEventNotification(
             eventId,
@@ -134,6 +134,14 @@ class WebSocketManager {
             duration,
             'vote'
         );
+        
+        // Update progress bar with original duration if available
+        if (originalDuration) {
+            setTimeout(() => {
+                this.startProgressBar(duration, originalDuration);
+            }, 100);
+        }
+        
         this.createVoteUI(eventId, question, options, duration, results);
     }
 
@@ -208,7 +216,7 @@ class WebSocketManager {
 
     // COIN RAIN EVENT
     handleCoinRain(data) {
-        const { eventId, duration = 10000, coinValue = 50, startTime } = data;
+        const { eventId, duration = 10000, originalDuration, coinValue = 50, startTime } = data;
         
         // Calculate remaining duration if event already started
         const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;
@@ -217,11 +225,19 @@ class WebSocketManager {
             this.createEventNotification(
                 eventId,
                 '🌧️ Lluvia de Monedas',
-                `¡Recoge las monedas doradas! +${coinValue} monedas cada una`,
+                '¡Recoge las monedas doradas! +5 monedas cada una',
                 actualDuration,
                 'coin-rain'
             );
-            this.startCoinRain(eventId, actualDuration, coinValue);
+            
+            // Update progress bar with original duration if available
+            if (originalDuration) {
+                setTimeout(() => {
+                    this.startProgressBar(actualDuration, originalDuration);
+                }, 100);
+            }
+            
+            this.startCoinRain(eventId, actualDuration, 5);
         }
     }
 
@@ -261,36 +277,57 @@ class WebSocketManager {
         }, duration);
     }
 
-    createCoin(value) {
+    createCoin(value = 5) {
         const x = Phaser.Math.Between(50, game.config.width - 50);
         const y = Phaser.Math.Between(50, game.config.height - 50);
         
         const coin = game.scene.scenes[0].add.circle(x, y, 15, 0xFFD700);
         coin.setInteractive();
-        coin.coinValue = value;
+        coin.coinValue = 5; // Always 5 coins
         coin.active = true;
         coin.blinkTimer = null;
         
-        coin.on('pointerdown', () => {
+        // Add physics body for collision detection
+        game.scene.scenes[0].physics.add.existing(coin);
+        coin.body.setCircle(15);
+        
+        // Collect coin function
+        const collectCoin = () => {
             if (coin.active) {
-                // Add money and show feedback
-                if (window.stateManager) {
-                    window.stateManager.addMoney(value);
-                } else if (gameData) {
-                    gameData.addMoney(value);
-                }
+                coin.active = false;
+                
+                // Add money directly
+                gameData.money += 5;
+                console.log(`💰 Coin collected: +5 coins. Total: ${gameData.money}`);
                 
                 // Show floating text feedback
-                this.showFloatingText(`+${value}`, coin.x, coin.y, '#FFD700');
+                this.showFloatingText('+5', coin.x, coin.y, '#FFD700');
                 
-                // Clean up
-                if (coin.blinkTimer) {
-                    coin.blinkTimer.destroy();
-                }
-                coin.destroy();
-                coin.active = false;
+                // Graceful disappearance with scale tween
+                game.scene.scenes[0].tweens.add({
+                    targets: coin,
+                    scaleX: 0,
+                    scaleY: 0,
+                    alpha: 0,
+                    duration: 300,
+                    ease: 'Back.easeIn',
+                    onComplete: () => {
+                        if (coin.blinkTimer) {
+                            coin.blinkTimer.destroy();
+                        }
+                        coin.destroy();
+                    }
+                });
             }
-        });
+        };
+        
+        // Click to collect
+        coin.on('pointerdown', collectCoin);
+        
+        // Walk into coin to collect
+        if (game.scene.scenes[0].player) {
+            game.scene.scenes[0].physics.add.overlap(game.scene.scenes[0].player, coin, collectCoin);
+        }
         
         // Start blinking 5 seconds before disappearing (at 10s mark for 15s total)
         setTimeout(() => {
@@ -344,7 +381,7 @@ class WebSocketManager {
 
     // CRITICAL MADNESS EVENT
     handleCriticalMadness(data) {
-        const { eventId, duration = 300000, startTime } = data; // 5 minutes
+        const { eventId, duration = 300000, originalDuration, startTime } = data; // 5 minutes
         
         // Calculate remaining duration if event already started
         const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;
@@ -357,6 +394,14 @@ class WebSocketManager {
                 actualDuration,
                 'critical'
             );
+            
+            // Update progress bar with original duration if available
+            if (originalDuration) {
+                setTimeout(() => {
+                    this.startProgressBar(actualDuration, originalDuration);
+                }, 100);
+            }
+            
             this.startCriticalMadness(eventId, actualDuration);
         }
     }
@@ -382,7 +427,7 @@ class WebSocketManager {
 
     // SPEED CHALLENGE EVENT
     handleSpeedChallenge(data) {
-        const { eventId, duration = 180000, speedMultiplier = 2, startTime } = data; // 3 minutes
+        const { eventId, duration = 180000, originalDuration, speedMultiplier = 2, startTime } = data; // 3 minutes
         
         // Calculate remaining duration if event already started
         const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;
@@ -395,6 +440,14 @@ class WebSocketManager {
                 actualDuration,
                 'speed'
             );
+            
+            // Update progress bar with original duration if available
+            if (originalDuration) {
+                setTimeout(() => {
+                    this.startProgressBar(actualDuration, originalDuration);
+                }, 100);
+            }
+            
             this.startSpeedChallenge(eventId, actualDuration, speedMultiplier);
         }
     }
@@ -476,18 +529,19 @@ class WebSocketManager {
                (combatLog && combatLog.style.display !== 'none');
     }
     
-    startProgressBar(duration) {
+    startProgressBar(duration, originalDuration = null) {
         const progressBar = document.getElementById('event-progress');
         const timeDisplay = document.getElementById('event-time');
         
         if (!progressBar || !timeDisplay) return;
         
-        let timeLeft = duration / 1000;
-        const totalTime = timeLeft;
+        let timeLeft = Math.ceil(duration / 1000);
+        const totalDuration = originalDuration ? Math.ceil(originalDuration / 1000) : timeLeft;
         
         const updateProgress = () => {
-            const percentage = (timeLeft / totalTime) * 100;
-            progressBar.style.width = `${percentage}%`;
+            // Calculate percentage based on original event duration
+            const percentage = (timeLeft / totalDuration) * 100;
+            progressBar.style.width = `${Math.max(0, percentage)}%`;
             
             const minutes = Math.floor(timeLeft / 60);
             const seconds = Math.floor(timeLeft % 60);
@@ -593,6 +647,14 @@ class WebSocketManager {
     resetCriticalMadness() {
         window.criticalMadnessUsed = false;
         console.log('⚡ WebSocket: Critical Madness reset (left arena)');
+    }
+    
+    // Check for active events after tutorial completion
+    checkActiveEventsAfterTutorial() {
+        if (this.connected && this.shouldShowEvents()) {
+            console.log('🎓 WebSocket: Tutorial completed, checking for active events');
+            this.socket.emit('request_active_events');
+        }
     }
 }
 

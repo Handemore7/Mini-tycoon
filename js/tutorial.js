@@ -445,6 +445,11 @@ class Tutorial {
             this.inventoryOverridden = false;
         }
         
+        // Check for active WebSocket events after tutorial completion
+        if (window.webSocketManager) {
+            window.webSocketManager.checkActiveEventsAfterTutorial();
+        }
+        
         // Show completion message
         const completionText = this.scene.add.text(400, 300, 'Tutorial Complete!\nEnjoy the game!', {
             fontSize: '24px',
@@ -460,6 +465,11 @@ class Tutorial {
         });
     }
 
+    // Check if tutorial is currently active
+    static isActive() {
+        return window.Tutorial && window.Tutorial.instance && window.Tutorial.instance.isActive;
+    }
+    
     // Manual tutorial restart
     static restart() {
         localStorage.setItem('miniTycoon_showTutorial', 'true');
