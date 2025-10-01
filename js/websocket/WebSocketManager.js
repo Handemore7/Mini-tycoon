@@ -157,6 +157,15 @@ class WebSocketManager {
         
         document.body.appendChild(voteContainer);
         
+        // Auto-minimize if in arena
+        if (this.isInArena()) {
+            setTimeout(() => {
+                if (voteContainer && voteContainer.parentNode) {
+                    voteContainer.style.display = 'none';
+                }
+            }, 2000); // Show for 2 seconds then hide
+        }
+        
         // Vote buttons
         voteContainer.querySelectorAll('.vote-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -260,17 +269,77 @@ class WebSocketManager {
         coin.setInteractive();
         coin.coinValue = value;
         coin.active = true;
+        coin.blinkTimer = null;
         
         coin.on('pointerdown', () => {
             if (coin.active) {
-                window.stateManager.addMoney(value);
-                this.showNotification(`+${value} monedas`, 'success');
+                // Add money and show feedback
+                if (window.stateManager) {
+                    window.stateManager.addMoney(value);
+                } else if (gameData) {
+                    gameData.addMoney(value);
+                }
+                
+                // Show floating text feedback
+                this.showFloatingText(`+${value}`, coin.x, coin.y, '#FFD700');
+                
+                // Clean up
+                if (coin.blinkTimer) {
+                    coin.blinkTimer.destroy();
+                }
                 coin.destroy();
                 coin.active = false;
             }
         });
         
+        // Start blinking 5 seconds before disappearing (at 10s mark for 15s total)
+        setTimeout(() => {
+            if (coin.active) {
+                this.startCoinBlinking(coin);
+            }
+        }, 10000);
+        
         return coin;
+    }
+    
+    startCoinBlinking(coin) {
+        if (!coin.active) return;
+        
+        let blinkSpeed = 500; // Start slow
+        let timeLeft = 5000; // 5 seconds until disappear
+        
+        const blink = () => {
+            if (!coin.active) return;
+            
+            coin.setVisible(!coin.visible);
+            
+            // Increase blink speed as time runs out
+            timeLeft -= blinkSpeed;
+            if (timeLeft > 0) {
+                blinkSpeed = Math.max(100, blinkSpeed - 50); // Get faster
+                coin.blinkTimer = game.scene.scenes[0].time.delayedCall(blinkSpeed, blink);
+            }
+        };
+        
+        coin.blinkTimer = game.scene.scenes[0].time.delayedCall(blinkSpeed, blink);
+    }
+    
+    showFloatingText(text, x, y, color) {
+        const floatingText = game.scene.scenes[0].add.text(x, y, text, {
+            fontSize: '16px',
+            fill: color,
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        // Animate floating up and fade out
+        game.scene.scenes[0].tweens.add({
+            targets: floatingText,
+            y: y - 50,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2',
+            onComplete: () => floatingText.destroy()
+        });
     }
 
     // CRITICAL MADNESS EVENT
@@ -298,10 +367,16 @@ class WebSocketManager {
             active: true, 
             used: false 
         });
+        
+        // Set global flag for arena to detect
+        window.criticalMadnessActive = true;
+        console.log('⚡ WebSocket: Critical Madness activated globally');
     }
 
     endCriticalMadness(eventId) {
         this.activeEvents.delete(eventId);
+        window.criticalMadnessActive = false;
+        console.log('⚡ WebSocket: Critical Madness deactivated globally');
         this.showNotification('⚡ Critical Madness terminado', 'info');
     }
 
@@ -379,12 +454,26 @@ class WebSocketManager {
         
         document.body.appendChild(container);
         
+        // Auto-minimize if in arena
+        if (this.isInArena()) {
+            setTimeout(() => this.hideEventNotification(), 2000); // Show for 2 seconds then hide
+        }
+        
         // Start progress bar if duration provided
         if (duration) {
             this.startProgressBar(duration);
         }
         
         return container;
+    }
+    
+    // Check if player is currently in arena
+    isInArena() {
+        // Check if arena UI is visible
+        const arenaUI = document.getElementById('arena-ui');
+        const combatLog = document.getElementById('combat-log');
+        return (arenaUI && arenaUI.style.display !== 'none') || 
+               (combatLog && combatLog.style.display !== 'none');
     }
     
     startProgressBar(duration) {
@@ -466,11 +555,44 @@ class WebSocketManager {
         for (let [id, event] of this.activeEvents) {
             if (event.type === 'critical_madness' && event.active && !event.used) {
                 event.used = true;
-                this.showNotification('⚡ Critical Madness aplicado - 100% crítico en combate', 'success');
+                window.criticalMadnessUsed = true;
+                console.log('⚡ WebSocket: Critical Madness used in arena');
+                this.showNotification('⚡ Critical Madness aplicado - 80% crítico en combate', 'success');
+                
+                // Update notification to show (used) and minimize
+                this.updateCriticalMadnessNotification();
+                
                 return true;
             }
         }
         return false;
+    }
+    
+    // Update critical madness notification to show used status
+    updateCriticalMadnessNotification() {
+        const notification = document.getElementById('event-notification');
+        if (notification) {
+            const titleElement = notification.querySelector('h3');
+            const descriptionElement = notification.querySelector('p');
+            
+            if (titleElement) {
+                titleElement.textContent = '⚡ Critical Madness (USED)';
+            }
+            if (descriptionElement) {
+                descriptionElement.textContent = 'Efecto aplicado en el arena - 80% probabilidad crítica';
+            }
+            
+            // Auto-minimize after showing used status
+            setTimeout(() => {
+                this.hideEventNotification();
+            }, 2000);
+        }
+    }
+    
+    // Reset critical madness when leaving arena
+    resetCriticalMadness() {
+        window.criticalMadnessUsed = false;
+        console.log('⚡ WebSocket: Critical Madness reset (left arena)');
     }
 }
 

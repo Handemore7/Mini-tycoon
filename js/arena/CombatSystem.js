@@ -5,6 +5,11 @@ class CombatSystem {
     }
     
     getCriticalChance() {
+        // Check if critical madness is active and used
+        if (window.criticalMadnessActive && window.criticalMadnessUsed) {
+            return 0.8; // 80% critical chance
+        }
+        
         const baseCrit = 0.1;
         const swordBonus = (gameData?.inventory?.sword || 0) * 0.05;
         return Math.min(baseCrit + swordBonus, 0.5);
@@ -71,7 +76,14 @@ class CombatSystem {
     }
     
     updateCriticalBar() {
-        if (this.arena.turnState !== 'critical_attack') return;
+        if (this.arena.turnState !== 'critical_attack' || !this.arena.isOpen) {
+            // Clean up if arena closed or state changed
+            if (this.arena.attackTimer) {
+                this.arena.attackTimer.destroy();
+                this.arena.attackTimer = null;
+            }
+            return;
+        }
         
         this.criticalBarPosition += this.criticalBarDirection * 4;
         

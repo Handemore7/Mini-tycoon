@@ -57,35 +57,35 @@ class Arena {
             align: 'center'
         }).setOrigin(0.5).setVisible(false);
 
-        this.floorText = this.scene.add.text(400, 90, '', {
+        this.floorText = this.scene.add.text(400, 110, '', {
             fontSize: '18px',
             fill: '#ffaa00',
             fontWeight: 'bold'
         }).setOrigin(0.5).setVisible(false);
 
-        this.combatLogContainer = this.scene.add.container(50, 120).setVisible(false);
+        this.combatLogContainer = this.scene.add.container(50, 140).setVisible(false);
         this.scrollOffset = 0;
         this.maxVisibleLines = 15;
         this.lineHeight = 18;
         
         this.logMask = this.scene.add.graphics()
             .fillStyle(0xffffff)
-            .fillRect(50, 120, 700, this.maxVisibleLines * this.lineHeight);
+            .fillRect(50, 140, 700, this.maxVisibleLines * this.lineHeight);
         this.logMask.setVisible(false);
         
         this.combatLogContainer.setMask(this.logMask.createGeometryMask());
 
-        this.playerStats = this.scene.add.text(50, 400, '', {
+        this.playerStats = this.scene.add.text(50, 420, '', {
             fontSize: '14px',
             fill: '#00ff00'
         }).setVisible(false);
 
-        this.enemyStats = this.scene.add.text(400, 400, '', {
+        this.enemyStats = this.scene.add.text(400, 420, '', {
             fontSize: '14px',
             fill: '#ff6666'
         }).setVisible(false);
 
-        this.actionPrompt = this.scene.add.text(400, 480, '', {
+        this.actionPrompt = this.scene.add.text(400, 500, '', {
             fontSize: '16px',
             fill: '#ffff00',
             fontWeight: 'bold',
@@ -95,31 +95,29 @@ class Arena {
         this.attackBar = this.scene.add.graphics().setVisible(false);
         this.defenseOverlay = this.scene.add.graphics().setVisible(false);
 
-        this.attackButton = this.scene.add.text(200, 520, 'ATTACK', {
+        this.attackButton = this.scene.add.text(200, 540, 'ATTACK', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#cc0000',
             padding: { x: 15, y: 8 }
         }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
         
-        this.nextFloorButton = this.scene.add.text(600, 520, 'NEXT FLOOR', {
+        this.nextFloorButton = this.scene.add.text(600, 540, 'NEXT FLOOR', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#0066cc',
             padding: { x: 15, y: 8 }
         }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
         
-        this.potionButton = this.scene.add.text(400, 520, 'USE POTION', {
+        this.potionButton = this.scene.add.text(400, 540, 'USE POTION', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#00cc66',
             padding: { x: 15, y: 8 }
         }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
 
-
-
         // Start button for new runs
-        this.startButton = this.scene.add.text(400, 520, 'START DUNGEON RUN', {
+        this.startButton = this.scene.add.text(400, 540, 'START DUNGEON RUN', {
             fontSize: '18px',
             fill: '#ffffff',
             backgroundColor: '#27ae60',
@@ -175,6 +173,12 @@ class Arena {
         this.currentFloor = 1;
         this.currentHealth = gameData?.stats?.health || 100;
         this.totalCoinsEarned = 0;
+        
+        // Check and activate critical madness if available
+        if (window.criticalMadnessActive && !window.criticalMadnessUsed && window.webSocketManager) {
+            window.webSocketManager.useCriticalMadness();
+        }
+        
         this.enterFloor();
     }
 
@@ -305,6 +309,11 @@ class Arena {
     }
 
     gameOver() {
+        // Reset critical madness on death
+        if (window.webSocketManager) {
+            window.webSocketManager.resetCriticalMadness();
+        }
+        
         const coinsKept = Math.floor(this.totalCoinsEarned * 0.5);
         if (gameData?.addMoney) gameData.addMoney(coinsKept);
         
@@ -366,6 +375,7 @@ class Arena {
         this.turnState = 'waiting';
         this.combatSystem.statusEffects = { poisoned: 0, wounded: 0 };
         
+        // Clean up all timers and states
         if (this.attackTimer) {
             this.attackTimer.destroy();
             this.attackTimer = null;
@@ -374,6 +384,12 @@ class Arena {
             this.defenseTimer.destroy();
             this.defenseTimer = null;
         }
+        
+        // Reset critical attack state
+        this.criticalSuccess = false;
+        this.criticalBarPosition = 0;
+        this.criticalBarDirection = 1;
+        this.criticalInputEnabled = false;
         
         this.hideAttackUI();
         this.hideDefenseUI();
@@ -477,10 +493,16 @@ class Arena {
     close() {
         this.isOpen = false;
         
+        // Reset critical madness when leaving arena
+        if (window.webSocketManager) {
+            window.webSocketManager.resetCriticalMadness();
+        }
+        
         this.scene.input.off('pointerdown', this.criticalInputHandler);
         this.spaceKey.off('down', this.dodgeInputHandler);
         this.scene.input.off('wheel', this.handleScroll, this);
         
+        // Force cleanup all timers and combat states
         if (this.attackTimer) {
             this.attackTimer.destroy();
             this.attackTimer = null;
@@ -489,6 +511,13 @@ class Arena {
             this.defenseTimer.destroy();
             this.defenseTimer = null;
         }
+        
+        // Reset combat system state
+        this.turnState = 'waiting';
+        this.criticalSuccess = false;
+        this.criticalBarPosition = 0;
+        this.criticalBarDirection = 1;
+        this.criticalInputEnabled = false;
         
         this.resetDungeon();
         this.elements.forEach(element => element.setVisible(false));

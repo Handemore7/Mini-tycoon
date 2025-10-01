@@ -223,18 +223,33 @@ class DebugConsole {
             return;
         }
 
-        fetch('http://localhost:3001/trigger-event', {
+        // Auto-detect server URL
+        const serverUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001'
+            : 'https://mini-tycoon-production.up.railway.app';
+
+        fetch(`${serverUrl}/trigger-event`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({type: eventType, data: {}})
         })
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 409) {
+                return response.json().then(data => {
+                    this.showMessage('Event overlap prevented!');
+                    throw new Error(data.message);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             this.showMessage(`${eventType} triggered!`);
         })
         .catch(error => {
             console.error('Failed to trigger event:', error);
-            this.showMessage('Failed to trigger event!');
+            if (!error.message.includes('overlap')) {
+                this.showMessage('Failed to trigger event!');
+            }
         });
     }
 

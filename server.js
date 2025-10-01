@@ -75,6 +75,14 @@ io.on('connection', (socket) => {
 app.post('/trigger-event', (req, res) => {
     const { type, data } = req.body;
     
+    // Check for overlapping events (except for manual debug triggers)
+    if (hasActiveEvents()) {
+        return res.status(409).json({ 
+            error: 'Event overlap prevented', 
+            message: 'Another event is currently active' 
+        });
+    }
+    
     switch (type) {
         case 'server_vote':
             triggerServerVote(data);
@@ -231,14 +239,56 @@ function triggerSpeedChallenge(data = {}) {
     }, duration + 1000);
 }
 
-// Auto-trigger random events every 2 minutes (for demo)
+// Check if any events are currently active
+function hasActiveEvents() {
+    const now = Date.now();
+    for (let event of activeEvents.values()) {
+        if (event.endTime > now) {
+            console.log(`🚫 Event overlap prevented: ${event.type} still active`);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Weighted random event selection
+function selectRandomEvent() {
+    const eventWeights = [
+        { type: 'server_vote', weight: 40 },
+        { type: 'coin_rain', weight: 20 },
+        { type: 'speed_challenge', weight: 20 },
+        { type: 'critical_madness', weight: 20 }
+    ];
+    
+    const totalWeight = eventWeights.reduce((sum, event) => sum + event.weight, 0);
+    const random = Math.random() * totalWeight;
+    
+    let currentWeight = 0;
+    for (let event of eventWeights) {
+        currentWeight += event.weight;
+        if (random <= currentWeight) {
+            return event.type;
+        }
+    }
+    
+    return 'server_vote'; // fallback
+}
+
+// Auto-trigger events every 3 minutes with overlap prevention
 setInterval(() => {
-    const events = ['coin_rain', 'speed_challenge', 'critical_madness'];
-    const randomEvent = events[Math.floor(Math.random() * events.length)];
+    // Don't trigger if events are already active
+    if (hasActiveEvents()) {
+        console.log('⏳ Skipping event trigger - events still active');
+        return;
+    }
     
-    console.log(`Auto-triggering: ${randomEvent}`);
+    const selectedEvent = selectRandomEvent();
+    console.log(`🎲 Auto-triggering: ${selectedEvent}`);
     
-    switch (randomEvent) {
+    switch (selectedEvent) {
+        case 'server_vote':
+            triggerServerVote();
+            break;
         case 'coin_rain':
             triggerCoinRain();
             break;
@@ -249,13 +299,7 @@ setInterval(() => {
             triggerCriticalMadness();
             break;
     }
-}, 120000); // 2 minutes
-
-// Trigger vote every 5 minutes
-setInterval(() => {
-    console.log('Auto-triggering: server_vote');
-    triggerServerVote();
-}, 300000); // 5 minutes
+}, 180000); // 3 minutes
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
