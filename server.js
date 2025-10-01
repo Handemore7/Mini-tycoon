@@ -105,7 +105,7 @@ app.post('/trigger-event', (req, res) => {
 
 function triggerServerVote(data = {}) {
     const eventId = `vote_${Date.now()}`;
-    const duration = data.duration || 20000;
+    const duration = data.duration || 60000; // 1 minute
     const startTime = Date.now();
     const endTime = startTime + duration;
     
@@ -182,7 +182,7 @@ function triggerCoinRain(data = {}) {
 
 function triggerCriticalMadness(data = {}) {
     const eventId = `critical_madness_${Date.now()}`;
-    const duration = data.duration || 300000; // 5 minutes
+    const duration = data.duration || 120000; // 2 minutes
     const startTime = Date.now();
     const endTime = startTime + duration;
     

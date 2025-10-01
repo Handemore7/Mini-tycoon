@@ -187,10 +187,8 @@ class WebSocketManager {
                 btn.classList.add('voted');
                 voteContainer.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
                 
-                // Auto-minimize after voting
-                setTimeout(() => {
-                    this.minimizeVoteUI(eventId, question, options);
-                }, 1000);
+                // Minimize immediately after voting
+                this.minimizeVoteUI(eventId, question, options);
             });
         });
 
@@ -199,7 +197,11 @@ class WebSocketManager {
         const countdown = setInterval(() => {
             timeLeft--;
             const countdownEl = document.getElementById('vote-countdown');
-            if (countdownEl) countdownEl.textContent = timeLeft;
+            if (countdownEl) {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownEl.textContent = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${timeLeft}s`;
+            }
             if (timeLeft <= 0) {
                 clearInterval(countdown);
                 this.closeVoteUI();
@@ -240,7 +242,10 @@ class WebSocketManager {
         summary.id = 'vote-summary';
         summary.innerHTML = `
             <div class="vote-summary-popup">
-                <h4>🗳️ ${question}</h4>
+                <div class="summary-header">
+                    <h4>🗳️ ${question}</h4>
+                    <button class="expand-btn" onclick="window.webSocketManager.showVoteSummary()">▲</button>
+                </div>
                 <div class="vote-results" id="vote-results-${eventId}">
                     ${options.map((option, index) => `
                         <div class="result-item">
@@ -249,7 +254,6 @@ class WebSocketManager {
                         </div>
                     `).join('')}
                 </div>
-                <button onclick="this.parentElement.parentElement.remove()">×</button>
             </div>
         `;
         
@@ -262,6 +266,12 @@ class WebSocketManager {
         
         const summary = document.getElementById('vote-summary');
         if (summary) summary.remove();
+    }
+    
+    showVoteSummary() {
+        // This method can be used to expand the vote summary if needed
+        // For now, just keep the summary visible with real-time updates
+        console.log('Vote summary expand requested');
     }
 
     // COIN RAIN EVENT
@@ -443,7 +453,7 @@ class WebSocketManager {
             return;
         }
         
-        const { eventId, duration = 300000, originalDuration, startTime } = data; // 5 minutes
+        const { eventId, duration = 120000, originalDuration, startTime } = data; // 2 minutes
         
         // Calculate remaining duration if event already started
         const actualDuration = startTime ? Math.max(0, duration - (Date.now() - startTime)) : duration;

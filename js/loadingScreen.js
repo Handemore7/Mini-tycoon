@@ -4,6 +4,8 @@ class LoadingScreen {
         this.progress = 0;
         this.statusText = 'Initializing...';
         this.createLoadingScreen();
+        // Hide by default
+        this.hide();
     }
 
     createLoadingScreen() {
@@ -43,9 +45,7 @@ class LoadingScreen {
     hide() {
         this.isVisible = false;
         this.overlay.style.opacity = '0';
-        setTimeout(() => {
-            this.overlay.style.display = 'none';
-        }, 500);
+        this.overlay.style.display = 'none';
     }
 
     updateProgress(progress, status) {
@@ -59,6 +59,47 @@ class LoadingScreen {
         if (progressFill) progressFill.style.width = `${this.progress}%`;
         if (progressText) progressText.textContent = `${Math.round(this.progress)}%`;
         if (statusElement) statusElement.textContent = this.statusText;
+    }
+
+    showError(errorMessage) {
+        const statusElement = document.getElementById('loading-status');
+        const progressContainer = document.querySelector('.loading-progress');
+        
+        if (statusElement) {
+            statusElement.textContent = `❌ Error: ${errorMessage}`;
+            statusElement.style.color = '#ff6b6b';
+        }
+        
+        if (progressContainer) {
+            progressContainer.style.display = 'none';
+        }
+        
+        // Add refresh button
+        if (!document.getElementById('refresh-button')) {
+            const refreshButton = document.createElement('button');
+            refreshButton.id = 'refresh-button';
+            refreshButton.innerHTML = '🔄 Refresh Game';
+            refreshButton.style.cssText = `
+                background: #4CAF50;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                font-size: 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                margin-top: 20px;
+                transition: background 0.3s;
+            `;
+            
+            refreshButton.onmouseover = () => refreshButton.style.background = '#45a049';
+            refreshButton.onmouseout = () => refreshButton.style.background = '#4CAF50';
+            refreshButton.onclick = () => window.location.reload();
+            
+            const loadingContainer = document.querySelector('.loading-container');
+            if (loadingContainer) {
+                loadingContainer.appendChild(refreshButton);
+            }
+        }
     }
 
     setStatus(status) {

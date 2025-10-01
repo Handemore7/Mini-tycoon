@@ -84,10 +84,10 @@ class Decorations {
         }).setOrigin(0.5).setVisible(false);
 
         // Decoration cards
-        this.tableCard = this.createDecorationCard(200, 260, 'table');
-        this.plantCard = this.createDecorationCard(320, 260, 'plant');
-        this.trophyCard = this.createDecorationCard(440, 260, 'trophy');
-        this.fountainCard = this.createDecorationCard(560, 260, 'fountain');
+        this.tableCard = this.createDecorationCard(190, 260, 'table');
+        this.plantCard = this.createDecorationCard(330, 260, 'plant');
+        this.trophyCard = this.createDecorationCard(470, 260, 'trophy');
+        this.fountainCard = this.createDecorationCard(610, 260, 'fountain');
 
         // Bottom info section
         this.infoBg = this.scene.add.graphics()

@@ -4,11 +4,8 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // Show loading screen
-        if (window.loadingScreen) {
-            window.loadingScreen.show();
-            window.loadingScreen.updateProgress(0, 'Loading assets...');
-        }
+        // Don't show loading screen during initial preload
+        // Loading screen will be shown only when user is logged in and tutorial is complete
         
         // Start asset preloading
         if (window.assetPreloader) {
@@ -52,9 +49,7 @@ class GameScene extends Phaser.Scene {
         
         this.load.on('progress', (progress) => {
             window.errorLogger?.trackPerformance('assetLoadProgress', progress * 100);
-            if (window.loadingScreen) {
-                window.loadingScreen.updateProgress(progress * 50, 'Loading assets...');
-            }
+            // Don't update loading screen during initial asset loading
         });
     }
     
@@ -117,25 +112,40 @@ class GameScene extends Phaser.Scene {
     }
     
     async loadPlayerData() {
-        if (window.loadingScreen) {
+        // Only show loading screen if user is logged in and tutorial is complete
+        const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
+        const shouldShowLoading = gameData.playerName && tutorialCompleted;
+        
+        if (shouldShowLoading && window.loadingScreen) {
+            window.loadingScreen.show();
             window.loadingScreen.updateProgress(60, 'Connecting to database...');
         }
         
-        if (window.database && gameData.playerName) {
-            console.log('🔄 Loading player data from database...');
-            const loaded = await gameData.loadFromDatabase(gameData.playerName);
-            if (loaded) {
-                console.log('✅ Player data loaded from database');
+        try {
+            if (window.database && gameData.playerName) {
+                console.log('🔄 Loading player data from database...');
+                const loaded = await gameData.loadFromDatabase(gameData.playerName);
+                if (loaded) {
+                    console.log('✅ Player data loaded from database');
+                } else {
+                    console.log('ℹ️ No database data found, using local data');
+                }
+            }
+            
+            if (shouldShowLoading && window.loadingScreen) {
+                window.loadingScreen.updateProgress(80, 'Initializing game systems...');
+            }
+            
+            this.initializeGame();
+        } catch (error) {
+            console.error('Failed to load player data:', error);
+            if (shouldShowLoading && window.loadingScreen) {
+                window.loadingScreen.showError('Failed to connect to database. Check your internet connection.');
             } else {
-                console.log('ℹ️ No database data found, using local data');
+                // Fallback for users without loading screen
+                this.initializeGame();
             }
         }
-        
-        if (window.loadingScreen) {
-            window.loadingScreen.updateProgress(80, 'Initializing game systems...');
-        }
-        
-        this.initializeGame();
     }
 
     showNamePrompt() {
@@ -609,21 +619,20 @@ class GameScene extends Phaser.Scene {
             }
             
             this.hideNamePrompt();
-            this.loadPlayerData();
+            this.initializeGame(); // Skip loadPlayerData for new users
             
         } catch (error) {
             console.error('Error checking player name:', error);
-            // If check fails, allow the name (fallback)
+            this.showNameError('Connection failed. Using offline mode - your progress will be saved locally.');
+            
+            // Fallback to offline mode
             gameData.playerName = playerName;
             gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
             
-            // Try to create user in Firebase (fallback)
-            if (window.database) {
-                await window.database.createPlayer(playerName, gameData.twitchStreamer);
-            }
-            
-            this.hideNamePrompt();
-            this.loadPlayerData();
+            setTimeout(() => {
+                this.hideNamePrompt();
+                this.initializeGame(); // Skip loadPlayerData for offline users
+            }, 2000);
         }
     }
 
@@ -832,11 +841,25 @@ class GameScene extends Phaser.Scene {
         this.tutorial = new Tutorial(this);
         window.Tutorial.instance = this.tutorial; // Global reference
         
-        if (window.loadingScreen) {
-            window.loadingScreen.updateProgress(100, 'Ready to play!');
-            setTimeout(() => {
-                window.loadingScreen.hide();
-            }, 500);
+        try {
+            // Only hide loading screen if it was shown
+            const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
+            const shouldShowLoading = gameData.playerName && tutorialCompleted;
+            
+            if (shouldShowLoading && window.loadingScreen) {
+                window.loadingScreen.updateProgress(100, 'Ready to play!');
+                setTimeout(() => {
+                    window.loadingScreen.hide();
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Game initialization failed:', error);
+            const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
+            const shouldShowLoading = gameData.playerName && tutorialCompleted;
+            
+            if (shouldShowLoading && window.loadingScreen) {
+                window.loadingScreen.showError('Game initialization failed. Please refresh to try again.');
+            }
         }
         
         this.tutorial.start();
