@@ -95,7 +95,7 @@ class UI {
             const ACCESS_TOKEN = window.CONFIG?.twitch?.accessToken;
             
             if (!CLIENT_ID || !ACCESS_TOKEN) {
-                console.log('Twitch credentials not configured');
+                console.log('Twitch profile pictures disabled in public version');
                 return;
             }
             
