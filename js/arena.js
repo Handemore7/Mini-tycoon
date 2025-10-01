@@ -528,6 +528,11 @@ class Arena {
         this.isOpen = true;
         this.combatLog.reset();
         
+        // Switch to arena music
+        if (window.audioManager) {
+            window.audioManager.playArenaMusic();
+        }
+        
         this.scene.input.on('pointerdown', this.criticalInputHandler);
         this.spaceKey.on('down', this.dodgeInputHandler);
         this.scene.input.on('wheel', this.handleScroll, this);
@@ -622,6 +627,11 @@ class Arena {
     
     forceClose() {
         this.isOpen = false;
+        
+        // Switch back to normal music
+        if (window.audioManager) {
+            window.audioManager.playNormalMusic();
+        }
         
         // Remove beforeunload protection
         if (this.beforeUnloadHandler) {

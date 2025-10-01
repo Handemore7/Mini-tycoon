@@ -125,6 +125,12 @@ class WebSocketManager {
 
     // SERVER VOTE EVENT
     handleServerVote(data) {
+        // Block events if user not logged in or tutorial active
+        if (!this.shouldShowEvents()) {
+            console.log('🚫 WebSocket: Server vote blocked - user not ready');
+            return;
+        }
+        
         const { eventId, question, options, duration = 20000, originalDuration, results = [] } = data;
         
         this.createEventNotification(
@@ -180,6 +186,11 @@ class WebSocketManager {
                 this.submitVote(eventId, parseInt(btn.dataset.option));
                 btn.classList.add('voted');
                 voteContainer.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
+                
+                // Auto-minimize after voting
+                setTimeout(() => {
+                    this.minimizeVoteUI(eventId, question, options);
+                }, 1000);
             });
         });
 
@@ -203,19 +214,64 @@ class WebSocketManager {
     }
 
     updateVoteResults(results) {
+        // Update full vote UI
         results.forEach((count, index) => {
             const countSpan = document.querySelector(`[data-option="${index}"] .vote-count`);
             if (countSpan) countSpan.textContent = `(${count})`;
         });
+        
+        // Update minimized summary
+        results.forEach((count, index) => {
+            const summaryCount = document.querySelector(`#vote-summary [data-option="${index}"]`);
+            if (summaryCount) summaryCount.textContent = count;
+        });
     }
 
+    minimizeVoteUI(eventId, question, options) {
+        const container = document.getElementById('vote-container');
+        if (container) container.remove();
+        
+        // Create minimized summary
+        this.createMinimizedVoteSummary(eventId, question, options);
+    }
+    
+    createMinimizedVoteSummary(eventId, question, options) {
+        const summary = document.createElement('div');
+        summary.id = 'vote-summary';
+        summary.innerHTML = `
+            <div class="vote-summary-popup">
+                <h4>🗳️ ${question}</h4>
+                <div class="vote-results" id="vote-results-${eventId}">
+                    ${options.map((option, index) => `
+                        <div class="result-item">
+                            <span>${option.name}:</span>
+                            <span class="vote-count" data-option="${index}">0</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
+        
+        document.body.appendChild(summary);
+    }
+    
     closeVoteUI() {
         const container = document.getElementById('vote-container');
         if (container) container.remove();
+        
+        const summary = document.getElementById('vote-summary');
+        if (summary) summary.remove();
     }
 
     // COIN RAIN EVENT
     handleCoinRain(data) {
+        // Block events if user not logged in or tutorial active
+        if (!this.shouldShowEvents()) {
+            console.log('🚫 WebSocket: Coin rain blocked - user not ready');
+            return;
+        }
+        
         const { eventId, duration = 10000, originalDuration, coinValue = 50, startTime } = data;
         
         // Calculate remaining duration if event already started
@@ -381,6 +437,12 @@ class WebSocketManager {
 
     // CRITICAL MADNESS EVENT
     handleCriticalMadness(data) {
+        // Block events if user not logged in or tutorial active
+        if (!this.shouldShowEvents()) {
+            console.log('🚫 WebSocket: Critical madness blocked - user not ready');
+            return;
+        }
+        
         const { eventId, duration = 300000, originalDuration, startTime } = data; // 5 minutes
         
         // Calculate remaining duration if event already started
@@ -427,6 +489,12 @@ class WebSocketManager {
 
     // SPEED CHALLENGE EVENT
     handleSpeedChallenge(data) {
+        // Block events if user not logged in or tutorial active
+        if (!this.shouldShowEvents()) {
+            console.log('🚫 WebSocket: Speed challenge blocked - user not ready');
+            return;
+        }
+        
         const { eventId, duration = 180000, originalDuration, speedMultiplier = 2, startTime } = data; // 3 minutes
         
         // Calculate remaining duration if event already started
@@ -647,6 +715,30 @@ class WebSocketManager {
     resetCriticalMadness() {
         window.criticalMadnessUsed = false;
         console.log('⚡ WebSocket: Critical Madness reset (left arena)');
+    }
+    
+    // Check if events should be shown (user logged in and tutorial completed)
+    shouldShowEvents() {
+        // Check if user is logged in
+        const isLoggedIn = gameData && gameData.playerName && gameData.playerName.trim() !== '';
+        
+        // Check if tutorial is completed
+        const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
+        
+        // Check if tutorial is currently active
+        const tutorialActive = window.Tutorial && window.Tutorial.isActive && window.Tutorial.isActive();
+        
+        const shouldShow = isLoggedIn && tutorialCompleted && !tutorialActive;
+        
+        if (!shouldShow) {
+            console.log('🚫 WebSocket: Events blocked -', {
+                isLoggedIn,
+                tutorialCompleted,
+                tutorialActive: !tutorialActive
+            });
+        }
+        
+        return shouldShow;
     }
     
     // Check for active events after tutorial completion

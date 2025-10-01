@@ -2,6 +2,7 @@ class SettingsMenu {
     constructor(scene) {
         this.scene = scene;
         this.isOpen = false;
+        this.isDragging = false;
         this.createMenu();
     }
 
@@ -28,20 +29,34 @@ class SettingsMenu {
             fill: '#ffffff'
         }).setOrigin(0.5).setVisible(false);
 
-        // Volume
+        // Volume label
         this.volumeLabel = this.scene.add.text(400, 300, `Volume: ${Math.round(gameData.volume * 100)}%`, {
             fontSize: '16px',
             fill: '#ffffff'
         }).setOrigin(0.5).setVisible(false);
+        
+        // Volume slider background
+        this.volumeSliderBg = this.scene.add.rectangle(400, 320, 200, 20, 0x333333);
+        this.volumeSliderBg.setVisible(false).setInteractive();
+        
+        // Volume slider fill
+        this.volumeSliderFill = this.scene.add.rectangle(
+            400 - 100 + (gameData.volume * 200) / 2, 
+            320, 
+            gameData.volume * 200, 
+            18, 
+            0x00ff00
+        );
+        this.volumeSliderFill.setVisible(false);
 
         // Save info
-        this.saveInfo = this.scene.add.text(400, 330, this.getSaveInfoText(), {
+        this.saveInfo = this.scene.add.text(400, 350, this.getSaveInfoText(), {
             fontSize: '12px',
             fill: '#cccccc'
         }).setOrigin(0.5).setVisible(false);
 
         // Export button
-        this.exportButton = this.scene.add.text(280, 370, 'EXPORT', {
+        this.exportButton = this.scene.add.text(280, 390, 'EXPORT', {
             fontSize: '12px',
             fill: '#ffaa00',
             backgroundColor: '#333333',
@@ -50,7 +65,7 @@ class SettingsMenu {
         this.exportButton.on('pointerdown', () => this.exportSave());
 
         // Delete button
-        this.deleteButton = this.scene.add.text(360, 370, 'DELETE DATA', {
+        this.deleteButton = this.scene.add.text(360, 390, 'DELETE DATA', {
             fontSize: '12px',
             fill: '#ff0000',
             backgroundColor: '#333333',
@@ -59,7 +74,7 @@ class SettingsMenu {
         this.deleteButton.on('pointerdown', () => this.confirmDelete());
 
         // Save & Close button
-        this.saveButton = this.scene.add.text(480, 370, 'SAVE & CLOSE', {
+        this.saveButton = this.scene.add.text(480, 390, 'SAVE & CLOSE', {
             fontSize: '12px',
             fill: '#00ff00',
             backgroundColor: '#333333',
@@ -67,27 +82,81 @@ class SettingsMenu {
         }).setOrigin(0.5).setVisible(false).setInteractive();
         this.saveButton.on('pointerdown', () => this.close());
 
+        // Setup volume slider interaction
+        this.setupVolumeSlider();
+        
         this.elements = [this.background, this.title, this.nameLabel, this.streamerLabel, 
-                        this.volumeLabel, this.saveInfo, this.exportButton, this.deleteButton, this.saveButton];
+                        this.volumeLabel, this.volumeSliderBg, this.volumeSliderFill, this.saveInfo, 
+                        this.exportButton, this.deleteButton, this.saveButton];
     }
 
+    setupVolumeSlider() {
+        this.volumeSliderBg.on('pointerdown', (pointer) => {
+            this.isDragging = true;
+            this.updateVolumeFromPointer(pointer);
+        });
+        
+        this.volumeSliderBg.on('pointermove', (pointer) => {
+            if (this.isDragging) {
+                this.updateVolumeFromPointer(pointer);
+            }
+        });
+        
+        this.scene.input.on('pointerup', () => {
+            this.isDragging = false;
+        });
+    }
+    
+    updateVolumeFromPointer(pointer) {
+        const sliderX = this.volumeSliderBg.x - 100;
+        const localX = pointer.x - sliderX;
+        const volume = Phaser.Math.Clamp(localX / 200, 0, 1);
+        
+        gameData.volume = Math.round(volume * 100) / 100;
+        this.updateVolumeDisplay();
+        
+        // Update audio manager volume
+        if (window.audioManager) {
+            window.audioManager.updateVolume(gameData.volume);
+        }
+        
+        // Save immediately
+        if (gameData.save) gameData.save();
+    }
+    
+    updateVolumeDisplay() {
+        // Update slider fill
+        this.volumeSliderFill.setSize(gameData.volume * 200, 18);
+        this.volumeSliderFill.x = 400 - 100 + (gameData.volume * 200) / 2;
+        
+        // Update label
+        this.volumeLabel.setText(`Volume: ${Math.round(gameData.volume * 100)}%`);
+    }
+    
     toggle() {
         this.isOpen = !this.isOpen;
+        
+        if (this.isOpen) {
+            // Update display values
+            this.nameLabel.setText(`Player Name: ${gameData.playerName}`);
+            this.streamerLabel.setText(`Twitch Streamer: ${gameData.twitchStreamer}`);
+            this.saveInfo.setText(this.getSaveInfoText());
+            this.updateVolumeDisplay();
+            this.scene.physics.pause();
+        } else {
+            this.scene.physics.resume();
+        }
+        
         this.elements.forEach(element => {
             element.setVisible(this.isOpen);
             if (this.isOpen) {
                 element.setDepth(2000);
             }
         });
-        
-        if (this.isOpen) {
-            this.scene.physics.pause();
-        } else {
-            this.scene.physics.resume();
-        }
     }
 
     close() {
+        this.isDragging = false;
         gameData.save();
         this.isOpen = false;
         this.elements.forEach(element => element.setVisible(false));

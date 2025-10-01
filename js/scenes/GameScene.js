@@ -4,6 +4,12 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
+        // Show loading screen
+        if (window.loadingScreen) {
+            window.loadingScreen.show();
+            window.loadingScreen.updateProgress(0, 'Loading assets...');
+        }
+        
         // Start asset preloading
         if (window.assetPreloader) {
             window.assetPreloader.preloadCriticalAssets();
@@ -35,6 +41,10 @@ class GameScene extends Phaser.Scene {
         this.load.image('decoration_building', 'assets/sprites/buildings/decoration.png');
         this.load.image('arena_building', 'assets/sprites/buildings/arena.png');
         
+        // Load audio
+        this.load.audio('normalMusic', 'assets/music/normal.ogg');
+        this.load.audio('arenaMusic', 'assets/music/arena.ogg');
+        
         // Enhanced error handling
         this.load.on('loaderror', (file) => {
             window.errorLogger?.error('Failed to load asset:', file.src);
@@ -42,6 +52,9 @@ class GameScene extends Phaser.Scene {
         
         this.load.on('progress', (progress) => {
             window.errorLogger?.trackPerformance('assetLoadProgress', progress * 100);
+            if (window.loadingScreen) {
+                window.loadingScreen.updateProgress(progress * 50, 'Loading assets...');
+            }
         });
     }
     
@@ -104,6 +117,10 @@ class GameScene extends Phaser.Scene {
     }
     
     async loadPlayerData() {
+        if (window.loadingScreen) {
+            window.loadingScreen.updateProgress(60, 'Connecting to database...');
+        }
+        
         if (window.database && gameData.playerName) {
             console.log('🔄 Loading player data from database...');
             const loaded = await gameData.loadFromDatabase(gameData.playerName);
@@ -114,6 +131,10 @@ class GameScene extends Phaser.Scene {
             }
         }
         
+        if (window.loadingScreen) {
+            window.loadingScreen.updateProgress(80, 'Initializing game systems...');
+        }
+        
         this.initializeGame();
     }
 
@@ -121,58 +142,240 @@ class GameScene extends Phaser.Scene {
         // Pause physics
         this.physics.pause();
         
-        // Create prompt background
-        this.namePromptBg = this.add.rectangle(400, 300, 450, 280, 0x000000, 0.9);
+        // Create animated background overlay with subtle pattern
+        this.namePromptOverlay = this.add.graphics()
+            .fillGradientStyle(0x000000, 0x1a1a2e, 0x16213e, 0x0f3460, 0.95)
+            .fillRect(0, 0, 800, 600)
+            .setAlpha(0)
+            .setDepth(1000);
+            
+        // Floating particles background effect
+        this.createFloatingParticles();
+            
+        // Main container with modern glass morphism effect
+        this.namePromptBg = this.add.graphics()
+            .fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95)
+            .fillRoundedRect(150, 120, 500, 360, 20)
+            .lineStyle(2, 0x3498db, 0.8)
+            .strokeRoundedRect(150, 120, 500, 360, 20)
+            .setDepth(1001)
+            .setScale(0.8)
+            .setAlpha(0);
+            
+        // Add subtle inner glow
+        this.namePromptGlow = this.add.graphics()
+            .lineStyle(1, 0x74b9ff, 0.3)
+            .strokeRoundedRect(152, 122, 496, 356, 18)
+            .setDepth(1001)
+            .setAlpha(0);
         
-        // Title
-        this.namePromptTitle = this.add.text(400, 220, 'Setup Your Profile', {
-            fontSize: '20px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
+        // Animated welcome icon with rotation
+        this.welcomeIcon = this.add.text(400, 170, '🎮', {
+            fontSize: '40px'
+        }).setOrigin(0.5).setDepth(1002).setAlpha(0).setRotation(-0.1);
         
-        // Player name label
-        this.nameLabel = this.add.text(400, 260, 'Player Name (Required):', {
-            fontSize: '14px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
+        // Title with modern typography and gradient effect
+        this.namePromptTitle = this.add.text(400, 220, 'Welcome to Mini Tycoon!', {
+            fontSize: '28px',
+            fill: '#74b9ff',
+            fontWeight: 'bold',
+            stroke: '#2d3436',
+            strokeThickness: 1
+        }).setOrigin(0.5).setDepth(1002).setAlpha(0);
         
-        // Player name input
+        this.namePromptSubtitle = this.add.text(400, 250, 'Create your profile to begin your journey', {
+            fontSize: '16px',
+            fill: '#ddd',
+            fontStyle: 'italic'
+        }).setOrigin(0.5).setDepth(1002).setAlpha(0);
+        
+        // Player name section with enhanced styling
+        this.nameLabel = this.add.text(220, 290, '👤 Player Name (Your Twitch Username)', {
+            fontSize: '16px',
+            fill: '#ecf0f1',
+            fontWeight: 'bold'
+        }).setOrigin(0, 0.5).setDepth(1002).setAlpha(0);
+        
+        this.nameInputBg = this.add.graphics()
+            .fillGradientStyle(0x2d3436, 0x636e72, 0.9)
+            .fillRoundedRect(220, 305, 360, 40, 12)
+            .lineStyle(2, 0x74b9ff, 1)
+            .strokeRoundedRect(220, 305, 360, 40, 12)
+            .setDepth(1001).setAlpha(0);
+        
         this.nameInput = '';
-        this.nameInputText = this.add.text(400, 285, '|', {
-            fontSize: '16px',
-            fill: '#ffff00',
-            backgroundColor: '#333333',
-            padding: { x: 10, y: 5 }
-        }).setOrigin(0.5);
+        this.nameInputText = this.add.text(240, 325, 'Enter your Twitch username...', {
+            fontSize: '18px',
+            fill: '#95a5a6',
+            fontStyle: 'italic'
+        }).setOrigin(0, 0.5).setDepth(1002).setAlpha(0);
         
-        // Streamer label
-        this.streamerLabel = this.add.text(400, 320, 'Twitch Streamer (Optional):', {
+        // Character counter
+        this.nameCounter = this.add.text(570, 325, '0/20', {
             fontSize: '14px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
+            fill: '#95a5a6'
+        }).setOrigin(1, 0.5).setDepth(1002).setAlpha(0);
         
-        // Streamer input
-        this.streamerInput = gameData.twitchStreamer || '';
-        this.streamerInputText = this.add.text(400, 345, this.streamerInput + '|', {
+        // Streamer section with Twitch branding
+        this.streamerLabel = this.add.text(220, 365, '📺 Twitch Streamer (Optional)', {
             fontSize: '16px',
-            fill: '#00ff00',
-            backgroundColor: '#333333',
-            padding: { x: 10, y: 5 }
-        }).setOrigin(0.5);
+            fill: '#ecf0f1',
+            fontWeight: 'bold'
+        }).setOrigin(0, 0.5).setDepth(1002).setAlpha(0);
         
-        // Instructions
-        this.nameInstructions = this.add.text(400, 380, 'TAB: Switch fields | ENTER: Continue\n3-20 chars: letters, numbers, underscore only', {
-            fontSize: '12px',
-            fill: '#cccccc',
+        this.streamerInputBg = this.add.graphics()
+            .fillGradientStyle(0x2d3436, 0x636e72, 0.9)
+            .fillRoundedRect(220, 380, 360, 40, 12)
+            .lineStyle(2, 0x00b894, 1)
+            .strokeRoundedRect(220, 380, 360, 40, 12)
+            .setDepth(1001).setAlpha(0);
+        
+        this.streamerInput = gameData.twitchStreamer === 'your_streamer_name' ? '' : gameData.twitchStreamer;
+        this.streamerInputText = this.add.text(240, 400, this.streamerInput || 'Channel to monitor for rewards', {
+            fontSize: '18px',
+            fill: this.streamerInput ? '#ecf0f1' : '#95a5a6',
+            fontStyle: this.streamerInput ? 'normal' : 'italic'
+        }).setOrigin(0, 0.5).setDepth(1002).setAlpha(0);
+        
+        // Enhanced instructions with icons
+        this.nameInstructions = this.add.text(400, 440, '⌨️ TAB: Switch fields  •  ⏎ ENTER: Continue', {
+            fontSize: '14px',
+            fill: '#74b9ff',
             align: 'center'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(1002).setAlpha(0);
+        
+        this.nameRules = this.add.text(400, 460, 'Use your exact Twitch username to receive chat rewards\n3-20 characters: letters, numbers, underscore only', {
+            fontSize: '12px',
+            fill: '#95a5a6',
+            align: 'center',
+            lineSpacing: 3
+        }).setOrigin(0.5).setDepth(1002).setAlpha(0);
         
         // Current active field (0 = name, 1 = streamer)
         this.activeField = 0;
-        this.updateFieldHighlight();
+        
+        // Animate everything in
+        this.animatePromptIn();
         
         // Enable keyboard input
         this.input.keyboard.on('keydown', this.handleNameInput, this);
+    }
+    
+    createFloatingParticles() {
+        this.particles = [];
+        for (let i = 0; i < 15; i++) {
+            const particle = this.add.circle(
+                Phaser.Math.Between(0, 800),
+                Phaser.Math.Between(0, 600),
+                Phaser.Math.Between(2, 4),
+                0x74b9ff,
+                0.3
+            ).setDepth(999).setAlpha(0);
+            
+            this.particles.push(particle);
+            
+            // Animate particles floating
+            this.tweens.add({
+                targets: particle,
+                alpha: 0.6,
+                duration: 2000,
+                delay: i * 100,
+                ease: 'Power2'
+            });
+            
+            this.tweens.add({
+                targets: particle,
+                y: particle.y - 100,
+                x: particle.x + Phaser.Math.Between(-50, 50),
+                duration: 8000 + i * 200,
+                repeat: -1,
+                yoyo: true,
+                ease: 'Sine.easeInOut'
+            });
+        }
+    }
+    
+    animatePromptIn() {
+        // Fade in overlay with wave effect
+        this.tweens.add({
+            targets: this.namePromptOverlay,
+            alpha: 1,
+            duration: 500,
+            ease: 'Power2'
+        });
+        
+        // Scale and fade in main container with bounce
+        this.tweens.add({
+            targets: [this.namePromptBg, this.namePromptGlow],
+            scale: 1,
+            alpha: 1,
+            duration: 600,
+            delay: 200,
+            ease: 'Elastic.easeOut'
+        });
+        
+        // Animate welcome icon with rotation and scale
+        this.tweens.add({
+            targets: this.welcomeIcon,
+            alpha: 1,
+            scale: 1.2,
+            rotation: 0,
+            duration: 800,
+            delay: 400,
+            ease: 'Back.easeOut'
+        });
+        
+        // Add subtle floating animation to icon
+        this.tweens.add({
+            targets: this.welcomeIcon,
+            y: this.welcomeIcon.y - 5,
+            duration: 2000,
+            delay: 1200,
+            repeat: -1,
+            yoyo: true,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Stagger in text elements with slide effect
+        const textElements = [
+            this.namePromptTitle,
+            this.namePromptSubtitle,
+            this.nameLabel,
+            this.streamerLabel,
+            this.nameInstructions,
+            this.nameRules
+        ];
+        
+        textElements.forEach((element, index) => {
+            element.setX(element.x + 50); // Start offset
+            this.tweens.add({
+                targets: element,
+                alpha: 1,
+                x: element.x - 50,
+                duration: 400,
+                delay: 600 + (index * 80),
+                ease: 'Back.easeOut'
+            });
+        });
+        
+        // Animate input fields with scale effect
+        const inputElements = [
+            { bg: this.nameInputBg, text: this.nameInputText, counter: this.nameCounter },
+            { bg: this.streamerInputBg, text: this.streamerInputText }
+        ];
+        
+        inputElements.forEach((input, index) => {
+            this.tweens.add({
+                targets: [input.bg, input.text, input.counter].filter(Boolean),
+                alpha: 1,
+                scaleX: 1,
+                duration: 500,
+                delay: 800 + (index * 100),
+                ease: 'Back.easeOut'
+            });
+        });
+        
+        this.time.delayedCall(1000, () => this.updateFieldHighlight());
     }
     
     handleNameInput(event) {
@@ -210,38 +413,178 @@ class GameScene extends Phaser.Scene {
     }
     
     updateInputDisplay() {
-        this.nameInputText.setText(this.nameInput + (this.activeField === 0 ? '|' : ''));
-        this.streamerInputText.setText(this.streamerInput + (this.activeField === 1 ? '|' : ''));
+        // Update name input with enhanced styling
+        if (this.nameInput === '' && this.activeField !== 0) {
+            this.nameInputText.setText('Enter your Twitch username...').setStyle({ fill: '#95a5a6', fontStyle: 'italic' });
+        } else {
+            const cursor = this.activeField === 0 ? '|' : '';
+            const nameText = this.nameInput + cursor;
+            this.nameInputText.setText(nameText || (this.activeField === 0 ? '|' : 'Enter your Twitch username...'))
+                .setStyle({ 
+                    fill: this.nameInput || this.activeField === 0 ? '#ffffff' : '#95a5a6',
+                    fontStyle: this.nameInput ? 'normal' : 'italic'
+                }).setAlpha(1);
+        }
+        
+        // Update character counter with color coding
+        const nameLength = this.nameInput.length;
+        let counterColor = '#95a5a6';
+        if (nameLength >= 3 && nameLength <= 20) counterColor = '#00b894';
+        else if (nameLength > 20) counterColor = '#e17055';
+        
+        this.nameCounter.setText(`${nameLength}/20`).setStyle({ fill: counterColor });
+        
+        // Update streamer input
+        if (this.streamerInput === '' && this.activeField !== 1) {
+            this.streamerInputText.setText('Channel to monitor for rewards').setStyle({ fill: '#95a5a6', fontStyle: 'italic' });
+        } else {
+            const cursor = this.activeField === 1 ? '|' : '';
+            const streamerText = this.streamerInput + cursor;
+            this.streamerInputText.setText(streamerText || (this.activeField === 1 ? '|' : 'Channel to monitor for rewards'))
+                .setStyle({ 
+                    fill: this.streamerInput || this.activeField === 1 ? '#ffffff' : '#95a5a6',
+                    fontStyle: this.streamerInput ? 'normal' : 'italic'
+                }).setAlpha(1);
+        }
+        
+        // Stop any existing cursor animation to prevent visibility issues
+        if (this.cursorTween) {
+            this.cursorTween.stop();
+            this.cursorTween = null;
+        }
+        
+        // Ensure text is fully visible
+        if (this.nameInputText) this.nameInputText.setAlpha(1);
+        if (this.streamerInputText) this.streamerInputText.setAlpha(1);
     }
     
     updateFieldHighlight() {
+        // Animate field transitions with glow effects
         if (this.activeField === 0) {
-            this.nameInputText.setStyle({ fill: '#ffff00' });
-            this.streamerInputText.setStyle({ fill: '#666666' });
+            // Highlight name field
+            this.nameInputBg.clear()
+                .fillGradientStyle(0x2d3436, 0x636e72, 0.9)
+                .fillRoundedRect(220, 305, 360, 40, 12)
+                .lineStyle(3, 0x74b9ff, 1)
+                .strokeRoundedRect(220, 305, 360, 40, 12)
+                .lineStyle(1, 0x74b9ff, 0.5)
+                .strokeRoundedRect(218, 303, 364, 44, 14);
+                
+            // Dim streamer field
+            this.streamerInputBg.clear()
+                .fillGradientStyle(0x2d3436, 0x636e72, 0.9)
+                .fillRoundedRect(220, 380, 360, 40, 12)
+                .lineStyle(2, 0x636e72, 0.8)
+                .strokeRoundedRect(220, 380, 360, 40, 12);
+                
+            // Animate label colors
+            this.tweens.add({
+                targets: this.nameLabel,
+                alpha: 1,
+                duration: 200
+            });
+            this.tweens.add({
+                targets: this.streamerLabel,
+                alpha: 0.7,
+                duration: 200
+            });
         } else {
-            this.nameInputText.setStyle({ fill: '#666666' });
-            this.streamerInputText.setStyle({ fill: '#00ff00' });
+            // Dim name field
+            this.nameInputBg.clear()
+                .fillGradientStyle(0x2d3436, 0x636e72, 0.9)
+                .fillRoundedRect(220, 305, 360, 40, 12)
+                .lineStyle(2, 0x636e72, 0.8)
+                .strokeRoundedRect(220, 305, 360, 40, 12);
+                
+            // Highlight streamer field
+            this.streamerInputBg.clear()
+                .fillGradientStyle(0x2d3436, 0x636e72, 0.9)
+                .fillRoundedRect(220, 380, 360, 40, 12)
+                .lineStyle(3, 0x00b894, 1)
+                .strokeRoundedRect(220, 380, 360, 40, 12)
+                .lineStyle(1, 0x00b894, 0.5)
+                .strokeRoundedRect(218, 378, 364, 44, 14);
+                
+            // Animate label colors
+            this.tweens.add({
+                targets: this.nameLabel,
+                alpha: 0.7,
+                duration: 200
+            });
+            this.tweens.add({
+                targets: this.streamerLabel,
+                alpha: 1,
+                duration: 200
+            });
         }
         this.updateInputDisplay();
     }
     
-    showNameError(message) {
+    showNameError(message, color = '#e17055') {
         if (this.nameError) this.nameError.destroy();
         
-        this.nameError = this.add.text(400, 410, message, {
-            fontSize: '12px',
-            fill: '#ff0000',
-            backgroundColor: '#000000',
-            padding: { x: 8, y: 4 },
-            align: 'center'
-        }).setOrigin(0.5);
+        // Create error container with modern styling
+        this.nameErrorBg = this.add.graphics()
+            .fillGradientStyle(0x2d3436, 0x636e72, 0.95)
+            .fillRoundedRect(200, 470, 400, 50, 12)
+            .lineStyle(2, color === '#e17055' ? 0xe17055 : (color === '#ffff00' ? 0xfdcb6e : 0x00b894), 1)
+            .strokeRoundedRect(200, 470, 400, 50, 12)
+            .setDepth(1003).setAlpha(0);
         
-        this.time.delayedCall(3000, () => {
-            if (this.nameError) {
-                this.nameError.destroy();
-                this.nameError = null;
-            }
+        const icon = color === '#e17055' ? '⚠️' : (color === '#ffff00' ? '⏳' : '✅');
+        
+        this.nameError = this.add.text(400, 495, `${icon} ${message}`, {
+            fontSize: '14px',
+            fill: color,
+            fontWeight: 'bold',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(1004).setAlpha(0);
+        
+        // Animate in error message with bounce
+        this.tweens.add({
+            targets: [this.nameErrorBg, this.nameError],
+            alpha: 1,
+            y: '-=15',
+            duration: 400,
+            ease: 'Back.easeOut'
         });
+        
+        // Add subtle pulse for errors
+        if (color === '#e17055') {
+            this.tweens.add({
+                targets: this.nameError,
+                scale: 1.05,
+                duration: 300,
+                repeat: 2,
+                yoyo: true,
+                ease: 'Power2'
+            });
+        }
+        
+        // Auto-hide after delay (except for loading messages)
+        if (color !== '#ffff00') {
+            this.time.delayedCall(4000, () => {
+                if (this.nameError && this.nameErrorBg) {
+                    this.tweens.add({
+                        targets: [this.nameErrorBg, this.nameError],
+                        alpha: 0,
+                        y: '+=10',
+                        duration: 300,
+                        ease: 'Power2',
+                        onComplete: () => {
+                            if (this.nameError) {
+                                this.nameError.destroy();
+                                this.nameError = null;
+                            }
+                            if (this.nameErrorBg) {
+                                this.nameErrorBg.destroy();
+                                this.nameErrorBg = null;
+                            }
+                        }
+                    });
+                }
+            });
+        }
     }
 
     async checkPlayerName(playerName) {
@@ -286,14 +629,69 @@ class GameScene extends Phaser.Scene {
 
     hideNamePrompt() {
         this.input.keyboard.off('keydown', this.handleNameInput, this);
-        this.namePromptBg.destroy();
-        this.namePromptTitle.destroy();
-        this.nameLabel.destroy();
-        this.nameInputText.destroy();
-        this.streamerLabel.destroy();
-        this.streamerInputText.destroy();
-        this.nameInstructions.destroy();
+        
+        // Stop cursor animation
+        if (this.cursorTween) this.cursorTween.stop();
+        
+        // Success animation before hiding
+        this.tweens.add({
+            targets: this.namePromptBg,
+            scaleX: 1.05,
+            scaleY: 0.95,
+            duration: 200,
+            ease: 'Power2',
+            onComplete: () => {
+                // Animate out with staggered effect
+                const elements = [
+                    this.namePromptOverlay,
+                    this.namePromptBg,
+                    this.namePromptGlow,
+                    this.welcomeIcon,
+                    this.namePromptTitle,
+                    this.namePromptSubtitle,
+                    this.nameLabel,
+                    this.nameInputBg,
+                    this.nameInputText,
+                    this.nameCounter,
+                    this.streamerLabel,
+                    this.streamerInputBg,
+                    this.streamerInputText,
+                    this.nameInstructions,
+                    this.nameRules
+                ];
+                
+                elements.forEach((element, index) => {
+                    if (element) {
+                        this.tweens.add({
+                            targets: element,
+                            alpha: 0,
+                            scale: element === this.namePromptBg ? 0.8 : 1,
+                            y: element.y + 20,
+                            duration: 300,
+                            delay: index * 30,
+                            ease: 'Back.easeIn',
+                            onComplete: () => element.destroy()
+                        });
+                    }
+                });
+                
+                // Clean up particles
+                if (this.particles) {
+                    this.particles.forEach(particle => {
+                        this.tweens.add({
+                            targets: particle,
+                            alpha: 0,
+                            duration: 500,
+                            onComplete: () => particle.destroy()
+                        });
+                    });
+                }
+            }
+        });
+        
+        // Clean up error messages
         if (this.nameError) this.nameError.destroy();
+        if (this.nameErrorBg) this.nameErrorBg.destroy();
     }
     
     initializeGame() {
@@ -423,9 +821,24 @@ class GameScene extends Phaser.Scene {
             });
         }
         
+        // Initialize audio manager
+        if (!window.audioManager) {
+            window.audioManager = new AudioManager(this);
+        }
+        window.audioManager.createAudioObjects();
+        window.audioManager.playNormalMusic();
+        
         // Initialize tutorial for new players
         this.tutorial = new Tutorial(this);
         window.Tutorial.instance = this.tutorial; // Global reference
+        
+        if (window.loadingScreen) {
+            window.loadingScreen.updateProgress(100, 'Ready to play!');
+            setTimeout(() => {
+                window.loadingScreen.hide();
+            }, 500);
+        }
+        
         this.tutorial.start();
     }
 
