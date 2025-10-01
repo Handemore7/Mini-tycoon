@@ -99,7 +99,7 @@ class Tutorial {
         }).setDepth(2002);
 
         // Skip button (above top-right corner of text box)
-        this.skipButton = this.scene.add.text(550, 420, 'Skip (ESC)', {
+        this.skipButton = this.scene.add.text(550, 420, 'Skip (X)', {
             fontSize: '14px',
             fill: '#ffffff',
             backgroundColor: '#333333',
@@ -124,9 +124,9 @@ class Tutorial {
 
         this.nextButton.on('pointerdown', () => this.nextStep());
 
-        // ESC key to skip
-        this.escHandler = () => this.skip();
-        this.scene.input.keyboard.on('keydown-ESC', this.escHandler);
+        // X key to skip
+        this.xHandler = () => this.skip();
+        this.scene.input.keyboard.on('keydown-X', this.xHandler);
     }
 
     showStep() {
@@ -434,9 +434,9 @@ class Tutorial {
         if (this.backButton) this.backButton.destroy();
         if (this.nextButton) this.nextButton.destroy();
         
-        // Remove ESC key handler
-        if (this.escHandler) {
-            this.scene.input.keyboard.off('keydown-ESC', this.escHandler);
+        // Remove X key handler
+        if (this.xHandler) {
+            this.scene.input.keyboard.off('keydown-X', this.xHandler);
         }
         
         // Restore inventory toggle if overridden

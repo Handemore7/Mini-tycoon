@@ -150,7 +150,7 @@ class SettingsMenu {
         this.elements.forEach(element => {
             element.setVisible(this.isOpen);
             if (this.isOpen) {
-                element.setDepth(2000);
+                element.setDepth(3000);
             }
         });
     }
