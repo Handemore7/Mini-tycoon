@@ -139,25 +139,17 @@ class GameData {
 
     addMoney(amount) {
         this.money += amount;
-        this.debouncedSave();
-    }
-
-    debouncedSave() {
-        // Clear existing timeout
-        if (this.saveTimeout) {
-            clearTimeout(this.saveTimeout);
+        if (typeof saveSystem !== 'undefined') {
+            saveSystem.debouncedSave();
         }
-        
-        // Save after 1 second of inactivity
-        this.saveTimeout = setTimeout(() => {
-            this.save();
-        }, 1000);
     }
 
     spendMoney(amount) {
         if (this.money >= amount) {
             this.money -= amount;
-            this.debouncedSave();
+            if (typeof saveSystem !== 'undefined') {
+                saveSystem.debouncedSave();
+            }
             return true;
         }
         return false;
@@ -165,17 +157,23 @@ class GameData {
 
     updateStats(newStats) {
         Object.assign(this.stats, newStats);
-        this.save();
+        if (typeof saveSystem !== 'undefined') {
+            saveSystem.immediateSave();
+        }
     }
 
     updateInventory(item, tier) {
         this.inventory[item] = tier;
-        this.save();
+        if (typeof saveSystem !== 'undefined') {
+            saveSystem.immediateSave();
+        }
     }
 
     updateSettings(settings) {
         Object.assign(this, settings);
-        this.save();
+        if (typeof saveSystem !== 'undefined') {
+            saveSystem.immediateSave();
+        }
     }
 }
 

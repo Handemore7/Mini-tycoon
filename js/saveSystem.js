@@ -1,11 +1,10 @@
 class SaveSystem {
     constructor() {
         this.maxBackups = 3;
-        this.autoSaveInterval = 10000; // 10 seconds
         this.lastSaveTime = Date.now();
-        this.autoSaveTimer = null;
+        this.saveDebounceTimer = null;
+        this.saveDebounceDelay = 2000; // 2 seconds
         
-        this.startAutoSave();
         this.setupBeforeUnload();
     }
 
@@ -114,17 +113,23 @@ class SaveSystem {
         }
     }
 
-    // Auto-save every 10 seconds
-    startAutoSave() {
-        this.autoSaveTimer = setInterval(() => {
+    // Debounced save - only saves after 2 seconds of no activity
+    debouncedSave() {
+        if (this.saveDebounceTimer) {
+            clearTimeout(this.saveDebounceTimer);
+        }
+        
+        this.saveDebounceTimer = setTimeout(() => {
             this.saveGame();
-        }, this.autoSaveInterval);
+        }, this.saveDebounceDelay);
     }
 
-    stopAutoSave() {
-        if (this.autoSaveTimer) {
-            clearInterval(this.autoSaveTimer);
+    // Immediate save for critical actions
+    immediateSave() {
+        if (this.saveDebounceTimer) {
+            clearTimeout(this.saveDebounceTimer);
         }
+        this.saveGame();
     }
 
     // Save when browser closes
