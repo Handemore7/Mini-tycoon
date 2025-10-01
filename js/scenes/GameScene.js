@@ -172,10 +172,8 @@ class GameScene extends Phaser.Scene {
                     return;
                 }
                 
-                gameData.playerName = playerName;
-                gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
-                this.hideNamePrompt();
-                this.loadPlayerData();
+                // Check if name is already taken
+                this.checkPlayerName(playerName);
             }
         } else if (event.key === 'Tab') {
             event.preventDefault();
@@ -231,6 +229,34 @@ class GameScene extends Phaser.Scene {
                 this.nameError = null;
             }
         });
+    }
+
+    async checkPlayerName(playerName) {
+        // Show loading message
+        this.showNameError('Checking name availability...', '#ffff00');
+        
+        try {
+            const exists = await window.database.checkPlayerExists(playerName);
+            
+            if (exists) {
+                this.showNameError('Name already in use - choose another name');
+                return;
+            }
+            
+            // Name is available, proceed
+            gameData.playerName = playerName;
+            gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
+            this.hideNamePrompt();
+            this.loadPlayerData();
+            
+        } catch (error) {
+            console.error('Error checking player name:', error);
+            // If check fails, allow the name (fallback)
+            gameData.playerName = playerName;
+            gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
+            this.hideNamePrompt();
+            this.loadPlayerData();
+        }
     }
 
     hideNamePrompt() {

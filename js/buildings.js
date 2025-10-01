@@ -18,7 +18,6 @@ class Building extends Phaser.Physics.Arcade.Sprite {
         
         this.body.setImmovable(true);
         this.body.setSize(64, 64);
-        this.setInteractive();
         this.interactionCooldown = false;
         
         // Add text label
@@ -28,8 +27,6 @@ class Building extends Phaser.Physics.Arcade.Sprite {
             backgroundColor: '#000000',
             padding: { x: 4, y: 2 }
         }).setOrigin(0.5);
-        
-        this.on('pointerdown', () => this.interact(scene));
     }
 
     interact(scene) {

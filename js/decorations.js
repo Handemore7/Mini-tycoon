@@ -429,7 +429,7 @@ class Decorations {
         this.updateButtons();
         this.elements.forEach(element => {
             element.setVisible(true);
-            element.setDepth(1000);
+            element.setDepth(2000);
         });
         this.scene.physics.pause();
     }

@@ -62,8 +62,8 @@ class Upgrades {
         this.elements = [this.background, this.title, this.closeButton, 
                         this.bootsButton.container, this.passiveButton.container, this.activeButton.container];
         
-        // Set high depth for all elements to appear above everything
-        this.elements.forEach(element => element.setDepth(1000));
+        // Set highest depth for all elements to appear above everything
+        this.elements.forEach(element => element.setDepth(2000));
     }
 
     createUpgradeButton(x, y, upgradeType) {
@@ -186,7 +186,7 @@ class Upgrades {
         this.updateButtons();
         this.elements.forEach(element => {
             element.setVisible(true);
-            element.setDepth(1000);
+            element.setDepth(2000);
         });
         this.scene.physics.pause();
     }

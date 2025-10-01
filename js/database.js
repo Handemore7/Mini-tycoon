@@ -106,6 +106,27 @@ class Database {
     return false;
   }
 
+  async checkPlayerExists(playerName) {
+    if (!this.validatePlayerName(playerName)) {
+      return false;
+    }
+
+    if (this.isOnline) {
+      try {
+        const docSnap = await this.getDoc(
+          this.doc(this.db, "players", playerName)
+        );
+        return docSnap.exists();
+      } catch (error) {
+        console.error("❌ Firebase check error:", error);
+      }
+    }
+
+    // Fallback to localStorage check
+    const saved = localStorage.getItem(`minitycoon_${playerName}`);
+    return saved !== null;
+  }
+
   async loadPlayer(playerName) {
     if (!this.validatePlayerName(playerName)) {
       console.error('❌ Invalid player name for load');

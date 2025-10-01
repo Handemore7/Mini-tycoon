@@ -59,10 +59,10 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Basic game structure
 ✅ Player movement and stats
 ✅ Building system with collision detection
-✅ Touch/walk interaction with buildings
+✅ Touch/walk interaction with buildings (no clicking)
 ✅ Settings menu with save/load
 ✅ Immersive UI with character-attached elements
-✅ Mandatory player name setup
+✅ Mandatory player name setup with validation
 ✅ Twitch chat integration
 ✅ Real-time chat monitoring
 ✅ Anti-spam protection with visual feedback
@@ -72,7 +72,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Purchase feedback and inventory management
 ✅ Cloud save system with Firebase Firestore
 ✅ Automatic data synchronization across devices
-✅ Twitch profile pictures with multi-API fallback system
+✅ Twitch profile pictures with API integration
 ✅ Secure credential management for public deployment
 ✅ Input validation and data sanitization
 ✅ Cross-origin image loading with error handling
@@ -82,6 +82,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Decoration placement system with inventory integration
 ✅ Persistent inventory system with C key toggle
 ✅ Debug console with Konami Code activation
+✅ Menu depth management (always on top)
 ⏳ Arena/fighting system
 
 ## Store System
@@ -143,7 +144,8 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Inventory panel** with C key toggle (right-side)
 - **Minimal HUD** for clean gameplay experience
 - **Dynamic elements** that follow player movement
-- **Smart avatars** with multiple fallback methods for profile pictures
+- **Menu system** with proper depth management (always on top)
+- **Touch-only building interaction** for immersive gameplay
 
 ## Database Security
 
@@ -181,13 +183,13 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ## Next Steps
 
 1. Develop arena/fighting system with automated combat
-2. Add user authentication for enhanced security
-3. Add more Twitch integration features (followers, subs, etc.)
-4. Implement visual equipment sprites and animations
-5. Add more decoration types and furniture options
-6. Create achievement system with unlock rewards
-7. Add multiplayer features with real-time synchronization
-8. Implement Twitch OAuth for enhanced profile features
+2. Add more decoration types and furniture options
+3. Create achievement system with unlock rewards
+4. Add more Twitch integration features (followers, subs, etc.)
+5. Implement visual equipment sprites and animations
+6. Add multiplayer features with real-time synchronization
+7. Implement Twitch OAuth for enhanced profile features
+8. Add sound effects and background music
 
 ## Cloud Save System
 
@@ -221,8 +223,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 **Interface:**
 - **C Key**: Toggle inventory visibility
 - **ESC Key**: Open settings menu
-- **Mouse Click**: Interact with buildings and UI elements
-- **Walk Into Buildings**: Alternative interaction method
+- **Walk Into Buildings**: Only way to interact with buildings (no clicking)
 
 **Debug:**
 - **Konami Code** (WWSSADAD+Enter): Open debug console

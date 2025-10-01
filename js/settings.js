@@ -64,7 +64,12 @@ class SettingsMenu {
 
     toggle() {
         this.isOpen = !this.isOpen;
-        this.elements.forEach(element => element.setVisible(this.isOpen));
+        this.elements.forEach(element => {
+            element.setVisible(this.isOpen);
+            if (this.isOpen) {
+                element.setDepth(2000);
+            }
+        });
         
         if (this.isOpen) {
             this.scene.physics.pause();

@@ -55,8 +55,8 @@ class Store {
         this.elements = [this.background, this.title, this.closeButton, 
                         this.swordButton.container, this.shieldButton.container, this.potionButton.container];
         
-        // Set high depth for all elements to appear above everything
-        this.elements.forEach(element => element.setDepth(1000));
+        // Set highest depth for all elements to appear above everything
+        this.elements.forEach(element => element.setDepth(2000));
     }
 
     createItemButton(x, y, itemType) {
@@ -186,7 +186,7 @@ class Store {
         this.updateButtons();
         this.elements.forEach(element => {
             element.setVisible(true);
-            element.setDepth(1000);
+            element.setDepth(2000);
         });
         this.scene.physics.pause();
     }

@@ -16,14 +16,15 @@ class Inventory {
             .fillStyle(0x000000, 0.8)
             .fillRect(675, 160, 100, 250)
             .lineStyle(2, 0x333333, 1)
-            .strokeRect(675, 160, 100, 250);
+            .strokeRect(675, 160, 100, 250)
+            .setDepth(1500);
 
         // Title
         this.title = this.scene.add.text(725, 175, 'INVENTORY', {
             fontSize: '12px',
             fill: '#ffffff',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(1500);
         
         // Setup C key to toggle inventory
         this.cKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
@@ -49,7 +50,8 @@ class Inventory {
                     .fillStyle(0x333333, 1)
                     .fillRect(x - slotSize/2, y - slotSize/2, slotSize, slotSize)
                     .lineStyle(1, 0x666666, 1)
-                    .strokeRect(x - slotSize/2, y - slotSize/2, slotSize, slotSize);
+                    .strokeRect(x - slotSize/2, y - slotSize/2, slotSize, slotSize)
+                    .setDepth(1500);
                 
                 this.slots.push({ x, y, slotBg, content: null });
             }
@@ -117,7 +119,7 @@ class Inventory {
             clickHandler = () => this.handleDecorationClick(itemType);
         }
         
-        const container = this.scene.add.container(slot.x, slot.y);
+        const container = this.scene.add.container(slot.x, slot.y).setDepth(1600);
         
         // Item icon
         const itemIcon = this.scene.add.text(0, -6, icon, {
