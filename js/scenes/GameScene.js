@@ -86,6 +86,21 @@ class GameScene extends Phaser.Scene {
             return;
         }
         
+        // Try to load from database
+        this.loadPlayerData();
+    }
+    
+    async loadPlayerData() {
+        if (window.database && gameData.playerName) {
+            console.log('🔄 Loading player data from database...');
+            const loaded = await gameData.loadFromDatabase(gameData.playerName);
+            if (loaded) {
+                console.log('✅ Player data loaded from database');
+            } else {
+                console.log('ℹ️ No database data found, using local data');
+            }
+        }
+        
         this.initializeGame();
     }
 
@@ -133,9 +148,10 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Instructions
-        this.nameInstructions = this.add.text(400, 380, 'TAB: Switch fields | ENTER: Continue', {
+        this.nameInstructions = this.add.text(400, 380, 'TAB: Switch fields | ENTER: Continue\n3-20 chars: letters, numbers, underscore only', {
             fontSize: '12px',
-            fill: '#cccccc'
+            fill: '#cccccc',
+            align: 'center'
         }).setOrigin(0.5);
         
         // Current active field (0 = name, 1 = streamer)
@@ -148,12 +164,18 @@ class GameScene extends Phaser.Scene {
     
     handleNameInput(event) {
         if (event.key === 'Enter') {
-            if (this.nameInput.trim() !== '') {
-                gameData.playerName = this.nameInput.trim();
+            const playerName = this.nameInput.trim();
+            if (playerName !== '') {
+                // Validate player name format
+                if (!/^[a-zA-Z0-9_]{3,20}$/.test(playerName)) {
+                    this.showNameError('Name must be 3-20 characters (letters, numbers, underscore only)');
+                    return;
+                }
+                
+                gameData.playerName = playerName;
                 gameData.twitchStreamer = this.streamerInput.trim() || 'Handemore7';
-                gameData.save();
                 this.hideNamePrompt();
-                this.initializeGame();
+                this.loadPlayerData();
             }
         } else if (event.key === 'Tab') {
             event.preventDefault();
@@ -192,6 +214,25 @@ class GameScene extends Phaser.Scene {
         this.updateInputDisplay();
     }
     
+    showNameError(message) {
+        if (this.nameError) this.nameError.destroy();
+        
+        this.nameError = this.add.text(400, 410, message, {
+            fontSize: '12px',
+            fill: '#ff0000',
+            backgroundColor: '#000000',
+            padding: { x: 8, y: 4 },
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.time.delayedCall(3000, () => {
+            if (this.nameError) {
+                this.nameError.destroy();
+                this.nameError = null;
+            }
+        });
+    }
+
     hideNamePrompt() {
         this.input.keyboard.off('keydown', this.handleNameInput, this);
         this.namePromptBg.destroy();
@@ -201,6 +242,7 @@ class GameScene extends Phaser.Scene {
         this.streamerLabel.destroy();
         this.streamerInputText.destroy();
         this.nameInstructions.destroy();
+        if (this.nameError) this.nameError.destroy();
     }
     
     initializeGame() {
@@ -292,5 +334,23 @@ class GameScene extends Phaser.Scene {
         if (this.ui) {
             this.ui.update();
         }
+    }
+
+    showMessage(text, color = '#00ff00') {
+        if (this.messageText) this.messageText.destroy();
+        
+        this.messageText = this.add.text(400, 100, text, {
+            fontSize: '16px',
+            fill: color,
+            backgroundColor: '#000000',
+            padding: { x: 8, y: 4 }
+        }).setOrigin(0.5);
+        
+        this.time.delayedCall(3000, () => {
+            if (this.messageText) {
+                this.messageText.destroy();
+                this.messageText = null;
+            }
+        });
     }
 }

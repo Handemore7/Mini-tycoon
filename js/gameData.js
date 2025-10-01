@@ -21,6 +21,8 @@ class GameData {
         this.chatStreak = 0;
         this.lastChatDate = null;
         this.arenaWins = 0;
+        this.decorationInventory = {};
+        this.healthPotions = 0;
         
         // Load saved data if available
         this.loadGame();
@@ -83,14 +85,17 @@ class GameData {
         this.chatStreak = saveData.chatStreak || 0;
         this.lastChatDate = saveData.lastChatDate || null;
         this.arenaWins = saveData.arenaWins || 0;
+        this.decorationInventory = saveData.decorationInventory || {};
+        this.healthPotions = saveData.healthPotions || 0;
     }
 
-    save() {
-        // Use new save system if available
-        if (typeof saveSystem !== 'undefined') {
+    async save() {
+        if (window.database && this.playerName) {
+            await window.database.savePlayer(this.playerName, this.getSaveData());
+        } else if (typeof saveSystem !== 'undefined') {
             saveSystem.saveGame();
         } else {
-            // Fallback to old method
+            // Fallback to localStorage
             localStorage.setItem('playerName', this.playerName);
             localStorage.setItem('twitchStreamer', this.twitchStreamer);
             localStorage.setItem('volume', this.volume.toString());
@@ -101,15 +106,58 @@ class GameData {
         }
     }
 
+    getSaveData() {
+        return {
+            playerName: this.playerName || '',
+            twitchStreamer: this.twitchStreamer || 'your_streamer_name',
+            volume: this.volume || 0.5,
+            money: this.money || 100,
+            stats: this.stats || {},
+            inventory: this.inventory || {},
+            decorations: this.decorations || [],
+            upgrades: this.upgrades || {},
+            passiveIncome: this.passiveIncome || 1,
+            chatBonus: this.chatBonus || 10,
+            chatStreak: this.chatStreak || 0,
+            lastChatDate: this.lastChatDate || null,
+            arenaWins: this.arenaWins || 0,
+            decorationInventory: this.decorationInventory || {},
+            healthPotions: this.healthPotions || 0
+        };
+    }
+
+    async loadFromDatabase(playerName) {
+        if (window.database) {
+            const saveData = await window.database.loadPlayer(playerName);
+            if (saveData) {
+                this.applySaveData(saveData);
+                return true;
+            }
+        }
+        return false;
+    }
+
     addMoney(amount) {
         this.money += amount;
-        this.save();
+        this.debouncedSave();
+    }
+
+    debouncedSave() {
+        // Clear existing timeout
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        
+        // Save after 1 second of inactivity
+        this.saveTimeout = setTimeout(() => {
+            this.save();
+        }, 1000);
     }
 
     spendMoney(amount) {
         if (this.money >= amount) {
             this.money -= amount;
-            this.save();
+            this.debouncedSave();
             return true;
         }
         return false;

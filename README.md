@@ -10,9 +10,15 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Settings Menu**: ESC key to access volume, streamer settings, save game
 - **Twitch Integration**: Real-time chat monitoring with anti-spam protection
 - **Profile Setup**: Mandatory player name + optional streamer selection
-- **Auto-Save System**: Enhanced save system with backups and export functionality
+- **Cloud Save System**: Firebase Firestore database with localStorage fallback
 - **Inventory System**: Persistent right-side inventory with C key toggle
 - **Debug Console**: Konami Code (WWSSADAD+Enter) for comprehensive debugging
+
+## Setup
+
+1. **Copy configuration file**: `cp js/config.template.js js/config.js`
+2. **Edit config.js** with your Firebase and Twitch credentials
+3. **Never commit config.js** to version control (already in .gitignore)
 
 ## How to Play
 
@@ -63,8 +69,8 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Equipment progression (5 tiers for swords and shields)
 ✅ Health potion system
 ✅ Purchase feedback and inventory management
-✅ Enhanced auto-save system with backups
-✅ Save export functionality
+✅ Cloud save system with Firebase Firestore
+✅ Automatic data synchronization across devices
 ✅ Upgrades system with 10-tier progression
 ✅ Character upgrade mechanics (speed, income, chat bonus)
 ✅ Profile deletion functionality
@@ -84,7 +90,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - Progressive tier system with increasing stats and costs
 - Visual feedback for purchases and insufficient funds
 - Equipment display in UI showing current gear
-- Persistent inventory saved to localStorage
+- Persistent inventory saved to cloud database
 - Anti-spam interaction system with cooldowns
 
 ## Upgrades System
@@ -110,7 +116,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Health Potions**: Instant use potions (🧪) with click consumption
 - **Placement Mode**: Click decorations to enter placement mode
 - **Visual Feedback**: Item counts and tier levels displayed
-- **Persistent Storage**: Inventory state saved automatically
+- **Cloud Storage**: Inventory state synchronized across devices
 
 ## Debug Console
 
@@ -133,31 +139,48 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Minimal HUD** for clean gameplay experience
 - **Dynamic elements** that follow player movement
 
+## Database Security
+
+**Firebase Security Rules:**
+- **Player validation**: Names must be 3-20 alphanumeric characters only
+- **Data consistency**: playerName must match document ID
+- **Read permissions**: Players can read their own data
+- **Write permissions**: Players can only write to their own documents
+- **Secure by default**: No public access to sensitive data
+
 ## Next Steps
 
 1. Develop arena/fighting system with automated combat
-2. Add real Twitch profile picture integration
+2. Add user authentication for enhanced security
 3. Add more Twitch integration features (followers, subs, etc.)
 4. Implement visual equipment sprites and animations
 5. Add more decoration types and furniture options
 6. Create achievement system with unlock rewards
+7. Add multiplayer features with real-time synchronization
 
-## Save System
+## Cloud Save System
 
-**Auto-Save Features:**
-- **Every 10 seconds**: Automatic background saving
-- **On all actions**: Money changes, purchases, stat updates
-- **Browser close**: Saves when closing tab/window
-- **3 Backup slots**: Rotating backups prevent data loss
-- **Export/Import**: Download save files for manual backup
-- **Fallback loading**: Tries backups if main save fails
+**Firebase Firestore Integration:**
+- **Real-time sync**: Automatic cloud synchronization
+- **Cross-device play**: Access your progress anywhere
+- **Secure storage**: Player data protected with validation rules
+- **Offline support**: localStorage fallback when offline
+- **Data validation**: Player names must be 3-20 alphanumeric characters
+- **Debounced saves**: Optimized saving to prevent spam
+
+**Save Features:**
+- **Instant sync**: Changes saved to cloud within 1 second
+- **Automatic fallback**: Uses localStorage if Firebase unavailable
+- **Data sanitization**: Clean data format for reliable storage
+- **Connection status**: Visual indicators for online/offline state
+- **Player validation**: Secure player name format enforcement
 
 **Save Triggers:**
 - Equipment purchases and upgrades
 - Money earning and spending
 - Settings and profile changes
 - Health and stat modifications
-- Periodic auto-save timer
+- Inventory and decoration changes
 
 ## Controls
 
@@ -176,12 +199,12 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ## Technical Details
 
 - **Frontend**: Phaser.js 3.70.0 for 2D game engine
-- **Storage**: Enhanced localStorage with backup system
+- **Database**: Firebase Firestore with localStorage fallback
 - **Twitch**: WebSocket connection to Twitch IRC (wss://irc-ws.chat.twitch.tv:443)
 - **UI System**: Immersive character-attached interface elements
 - **Assets**: Simple colored rectangles as placeholder sprites
 - **Architecture**: Modular JavaScript classes for easy expansion
-- **Save System**: Multi-layered persistence with error handling
+- **Cloud Storage**: Firebase Firestore with real-time synchronization
 - **Profile Pictures**: Framework ready for Twitch API integration
 - **Sprites**: Generated using [PixelLab.ai](https://www.pixellab.ai/)
 - **Inventory**: Persistent 2x6 grid system with item management

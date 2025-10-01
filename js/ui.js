@@ -17,9 +17,9 @@ class UI {
         }).setOrigin(0, 0.5);
 
         // Twitch connection status (top-right)
-        this.twitchContainer = this.scene.add.container(750, 30);
+        this.twitchContainer = this.scene.add.container(650, 30);
         
-        // Placeholder for Twitch PFP
+        // Twitch PFP - starts as purple circle, loads real image
         this.twitchPfp = this.scene.add.graphics()
             .fillStyle(0x9146ff)
             .fillCircle(0, 0, 20)
@@ -29,7 +29,9 @@ class UI {
             fontSize: '14px',
             fill: '#ffffff',
             stroke: '#000000',
-            strokeThickness: 1
+            strokeThickness: 2,
+            backgroundColor: '#000000',
+            padding: { x: 6, y: 3 }
         }).setOrigin(0, 0.5);
         
         this.twitchContainer.add([this.twitchPfp, this.twitchText]);
@@ -84,9 +86,57 @@ class UI {
     }
 
     async loadTwitchPfp() {
-        // For now, just show the placeholder circle
-        // To get real Twitch PFPs, you'd need to register a Twitch app and get API keys
-        console.log('Twitch PFP loading would require API keys');
+        try {
+            const username = gameData.twitchStreamer;
+            if (!username) return;
+            
+            // Get Twitch credentials from config
+            const CLIENT_ID = window.CONFIG?.twitch?.clientId;
+            const ACCESS_TOKEN = window.CONFIG?.twitch?.accessToken;
+            
+            if (!CLIENT_ID || !ACCESS_TOKEN) {
+                console.log('Twitch credentials not configured');
+                return;
+            }
+            
+            const response = await fetch(`https://api.twitch.tv/helix/users?login=${username}`, {
+                headers: {
+                    'Client-ID': CLIENT_ID,
+                    'Authorization': `Bearer ${ACCESS_TOKEN}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.data && data.data[0]) {
+                    const profileUrl = data.data[0].profile_image_url;
+                    
+                    // Método directo con Image object
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        // Crear textura desde imagen
+                        this.scene.textures.addImage(`twitch_pfp_${username}`, img);
+                        
+                        // Remover del contenedor antes de destruir
+                        this.twitchContainer.remove(this.twitchPfp);
+                        this.twitchPfp.destroy();
+                        
+                        // Crear nueva imagen en la misma posición (0,0 relativo al contenedor)
+                        this.twitchPfp = this.scene.add.image(0, 0, `twitch_pfp_${username}`)
+                            .setDisplaySize(40, 40)
+                            .setOrigin(0.5)
+                            .setVisible(true);
+                        
+                        // Agregar al contenedor
+                        this.twitchContainer.add(this.twitchPfp);
+                    };
+                    img.src = profileUrl;
+                }
+            }
+        } catch (error) {
+            console.log('Error loading Twitch profile:', error);
+        }
     }
 
     update() {

@@ -1,33 +1,21 @@
-# Dependencies
-node_modules/
-npm-debug.log*
-
-# Environment variables
+# Credentials and sensitive files
+js/config.js
+config.js
 .env
 .env.local
 .env.production
 
+# Node modules
+node_modules/
+
+# Build files
+dist/
+build/
+
 # IDE files
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # OS files
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-
-# Build outputs
-dist/
-build/
-
-# API keys (if added later)
-config/keys.js
-secrets.json
