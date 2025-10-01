@@ -117,7 +117,7 @@ class Arena {
         }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
 
         // Start button for new runs
-        this.startButton = this.scene.add.text(400, 540, 'START DUNGEON RUN', {
+        this.startButton = this.scene.add.text(320, 400, 'START ARENA', {
             fontSize: '18px',
             fill: '#ffffff',
             backgroundColor: '#27ae60',
@@ -125,10 +125,28 @@ class Arena {
         }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
         this.startButton.on('pointerdown', () => this.start());
 
+        // Leave button
+        this.leaveButton = this.scene.add.text(480, 400, 'LEAVE ARENA', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
+        this.leaveButton.on('pointerdown', () => this.forceClose());
+
+        // Escape button for boss fights
+        this.escapeButton = this.scene.add.text(400, 460, 'ESCAPE ARENA', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0.5).setVisible(false).setInteractive().setDepth(3001);
+        this.escapeButton.on('pointerdown', () => this.showEscapeConfirmation());
+
         this.elements = [this.background, this.headerBg, this.title, this.closeButton, this.description, this.floorText,
                        this.combatLogContainer, this.playerStats, this.enemyStats, this.actionPrompt,
                        this.attackBar, this.defenseOverlay, this.attackButton, this.nextFloorButton, this.potionButton,
-                       this.startButton];
+                       this.startButton, this.leaveButton, this.escapeButton];
     }
 
     setupInputHandlers() {
@@ -166,13 +184,14 @@ class Arena {
             }
         };
         
+        // Only add SPACE key, don't interfere with other keyboard handlers
         this.spaceKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     }
 
     startDungeon() {
+        console.log('🔥 ARENA FIGHT STARTING - startDungeon() called');
         this.currentFloor = 1;
-        this.currentHealth = gameData?.stats?.health || 100;
-        this.totalCoinsEarned = 0;
+        this.totalCoinsEarned = 1; // Set to 1 to hide choice buttons
         
         // Check and activate critical madness if available
         if (window.criticalMadnessActive && !window.criticalMadnessUsed && window.webSocketManager) {
@@ -183,6 +202,7 @@ class Arena {
     }
 
     enterFloor() {
+        console.log('🔥 ARENA FIGHT - enterFloor() called, floor:', this.currentFloor);
         this.currentEnemy = EnemyGenerator.generateEnemy(this.currentFloor);
         this.turnState = 'waiting';
         this.combatLog.addLog(`\n=== FLOOR ${this.currentFloor} ===`, '#ffffff');
@@ -212,7 +232,7 @@ class Arena {
     
     usePotion() {
         const potions = gameData?.healthPotions || 0;
-        const currentHealth = this.currentHealth;
+        const currentHealth = gameData?.stats?.health || 100;
         const maxHealth = gameData?.stats?.maxHealth || 100;
         
         if (this.combatSystem.statusEffects.wounded > 0) {
@@ -245,9 +265,9 @@ class Arena {
         
         gameData.healthPotions--;
         const healAmount = 50;
-        const oldHealth = this.currentHealth;
-        this.currentHealth = Math.min(maxHealth, this.currentHealth + healAmount);
-        const actualHeal = this.currentHealth - oldHealth;
+        const oldHealth = gameData.stats.health;
+        gameData.stats.health = Math.min(maxHealth, gameData.stats.health + healAmount);
+        const actualHeal = gameData.stats.health - oldHealth;
         
         this.combatLog.addColoredLog([
             { text: '✅ Used health potion! Healed ', color: '#00ff00' },
@@ -360,8 +380,12 @@ class Arena {
             this.defenseTimer = null;
         }
         
-        const coinsKept = Math.floor(this.totalCoinsEarned * 0.5);
+        const coinsKept = Math.floor(this.totalCoinsEarned * 0.1);
         if (gameData?.addMoney) gameData.addMoney(coinsKept);
+        
+        // Set health to 1 and start regeneration
+        gameData.stats.health = 1;
+        this.startHealthRegeneration();
         
         this.combatLog.addLog('\n💀 YOU DIED! 💀', '#ff6666');
         this.combatLog.addColoredLog([
@@ -371,8 +395,9 @@ class Arena {
         this.combatLog.addColoredLog([
             { text: 'Kept ', color: '#ffffff' },
             { text: `${coinsKept} coins`, color: '#ffff00' },
-            { text: ` (50% of ${this.totalCoinsEarned})`, color: '#cccccc' }
+            { text: ` (10% of ${this.totalCoinsEarned})`, color: '#cccccc' }
         ]);
+        this.combatLog.addLog('Health set to 1. Regenerating 1 HP every 10 seconds...', '#00ff00');
         
         if (this.currentFloor > (gameData?.bestArenaWave || 0)) {
             gameData.bestArenaWave = this.currentFloor;
@@ -415,7 +440,6 @@ class Arena {
     
     resetDungeon() {
         this.currentFloor = 1;
-        this.currentHealth = 0;
         this.totalCoinsEarned = 0;
         this.currentEnemy = null;
         this.turnState = 'waiting';
@@ -456,13 +480,30 @@ class Arena {
             this.floorText.setText(`Floor ${this.currentFloor}/${this.maxFloors} | Coins: ${this.totalCoinsEarned}`);
         }
         
-        // Show/hide start button based on game state
+        // Show choice buttons only when no enemy AND no coins earned
+        const showChoiceButtons = !this.currentEnemy && this.totalCoinsEarned === 0;
         if (this.startButton) {
-            const showStart = !this.currentEnemy && this.currentFloor === 1 && this.totalCoinsEarned === 0;
-            this.startButton.setVisible(showStart);
+            this.startButton.setVisible(showChoiceButtons);
+        }
+        if (this.leaveButton) {
+            this.leaveButton.setVisible(showChoiceButtons);
         }
         
-        const health = this.currentHealth || (gameData?.stats?.health || 100);
+        // Hide gameplay elements when showing choice buttons
+        if (this.floorText) {
+            this.floorText.setVisible(!showChoiceButtons);
+        }
+        if (this.combatLogContainer) {
+            this.combatLogContainer.setVisible(!showChoiceButtons);
+        }
+        if (this.playerStats) {
+            this.playerStats.setVisible(!showChoiceButtons);
+        }
+        if (this.enemyStats) {
+            this.enemyStats.setVisible(!showChoiceButtons);
+        }
+        
+        const health = gameData?.stats?.health || 100;
         const maxHealth = gameData?.stats?.maxHealth || 100;
         const damage = gameData?.stats?.damage || 10;
         const armor = gameData?.stats?.armor || 0;
@@ -500,33 +541,56 @@ class Arena {
             }
         }
         
-        if (this.attackButton) {
-            this.attackButton.setVisible(this.turnState === 'player_turn');
-        }
-        
-        if (this.potionButton) {
-            const showPotion = this.turnState === 'player_turn' && (gameData?.healthPotions || 0) > 0;
-            this.potionButton.setVisible(showPotion);
+        // Show combat buttons only when combat has started (totalCoinsEarned > 0)
+        if (this.totalCoinsEarned > 0) {
+            if (this.attackButton) {
+                this.attackButton.setVisible(this.turnState === 'player_turn');
+            }
             
-            if (this.combatSystem.statusEffects.wounded > 0) {
-                this.potionButton.setStyle({ backgroundColor: '#666666' });
-            } else {
-                this.potionButton.setStyle({ backgroundColor: '#00cc66' });
+            if (this.potionButton) {
+                const showPotion = this.turnState === 'player_turn' && (gameData?.healthPotions || 0) > 0;
+                this.potionButton.setVisible(showPotion);
+                
+                if (this.combatSystem.statusEffects.wounded > 0) {
+                    this.potionButton.setStyle({ backgroundColor: '#666666' });
+                } else {
+                    this.potionButton.setStyle({ backgroundColor: '#00cc66' });
+                }
             }
-        }
-        
-        if (this.nextFloorButton) {
-            const showNext = this.turnState === 'waiting' && !this.currentEnemy && this.currentFloor <= this.maxFloors;
-            this.nextFloorButton.setVisible(showNext);
-            if (showNext) {
-                this.nextFloorButton.setText(this.currentFloor >= this.maxFloors ? 'COMPLETE' : 'NEXT FLOOR');
+            
+            if (this.nextFloorButton) {
+                const showNext = this.turnState === 'waiting' && !this.currentEnemy && this.currentFloor <= this.maxFloors;
+                this.nextFloorButton.setVisible(showNext);
+                if (showNext) {
+                    this.nextFloorButton.setText(this.currentFloor >= this.maxFloors ? 'COMPLETE' : 'NEXT FLOOR');
+                }
             }
+            
+            if (this.escapeButton) {
+                const isBossFloor = this.currentFloor % 5 === 0 && this.currentFloor > 0;
+                const showEscape = this.turnState === 'waiting' && !this.currentEnemy && isBossFloor && this.currentFloor < this.maxFloors;
+                this.escapeButton.setVisible(showEscape);
+            }
+        } else {
+            // Hide all combat buttons when showing choice buttons
+            if (this.attackButton) this.attackButton.setVisible(false);
+            if (this.potionButton) this.potionButton.setVisible(false);
+            if (this.nextFloorButton) this.nextFloorButton.setVisible(false);
+            if (this.escapeButton) this.escapeButton.setVisible(false);
         }
     }
 
     open() {
+        console.log('🔥 ARENA OPENED - open() called');
         this.isOpen = true;
         this.combatLog.reset();
+        
+        // Reset to choice state
+        this.currentFloor = 1;
+        this.totalCoinsEarned = 0;
+        this.currentEnemy = null;
+        this.turnState = 'waiting';
+        console.log('🔥 ARENA STATE:', { floor: this.currentFloor, coins: this.totalCoinsEarned, enemy: this.currentEnemy });
         
         // Switch to arena music
         if (window.audioManager) {
@@ -534,7 +598,9 @@ class Arena {
         }
         
         this.scene.input.on('pointerdown', this.criticalInputHandler);
-        this.spaceKey.on('down', this.dodgeInputHandler);
+        if (this.spaceKey) {
+            this.spaceKey.on('down', this.dodgeInputHandler);
+        }
         this.scene.input.on('wheel', this.handleScroll, this);
         
         // Add beforeunload protection
@@ -568,25 +634,13 @@ class Arena {
     }
     
     checkPlayerDistance() {
-        if (!this.scene.player || !this.arenaPosition) return;
-        
-        // Don't close if in active combat
-        if (this.isInActiveCombat()) return;
-        
-        const distance = Phaser.Math.Distance.Between(
-            this.scene.player.x, this.scene.player.y,
-            this.arenaPosition.x, this.arenaPosition.y
-        );
-        
-        // Close arena if player is more than 120 pixels away and not in combat
-        if (distance > 120) {
-            this.close();
-        }
+        // Arena doesn't auto-close based on distance - only manual close allowed
+        return;
     }
 
     close() {
-        // Check if player is in active combat
-        if (this.isInActiveCombat()) {
+        // Show confirmation if combat has started (totalCoinsEarned > 0)
+        if (this.totalCoinsEarned > 0) {
             this.showExitConfirmation();
             return;
         }
@@ -595,7 +649,7 @@ class Arena {
     }
     
     isInActiveCombat() {
-        return this.currentEnemy && this.currentEnemy.health > 0 && this.currentFloor > 1;
+        return this.currentEnemy && this.currentEnemy.health > 0;
     }
     
     showExitConfirmation() {
@@ -612,7 +666,12 @@ class Arena {
             .strokeRoundedRect(200, 200, 400, 200, 10)
             .setDepth(4001);
             
-        const confirmText = this.scene.add.text(400, 280, 'Leave Arena?\n\nAll progress will be lost!\nYou will restart from Floor 1.', {
+        let confirmMessage = 'Leave Arena?\n\nAll progress will be lost!';
+        if (this.turnState === 'critical_attack' || this.turnState === 'dodge_event') {
+            confirmMessage += '\nActive event will be lost!';
+        }
+        
+        const confirmText = this.scene.add.text(400, 280, confirmMessage, {
             fontSize: '16px',
             fill: '#ffffff',
             align: 'center'
@@ -633,6 +692,21 @@ class Arena {
         }).setOrigin(0.5).setDepth(4002).setInteractive();
         
         yesBtn.on('pointerdown', () => {
+            // Reset arena state before closing
+            this.currentFloor = 1;
+            this.currentHealth = 0;
+            this.totalCoinsEarned = 0;
+            this.currentEnemy = null;
+            this.turnState = 'waiting';
+            
+            if (this.combatSystem) {
+                this.combatSystem.statusEffects = { poisoned: 0, wounded: 0 };
+            }
+            
+            if (window.webSocketManager) {
+                window.webSocketManager.resetCriticalMadness();
+            }
+            
             confirmBg.destroy();
             confirmBox.destroy();
             confirmText.destroy();
@@ -651,29 +725,16 @@ class Arena {
     }
     
     forceClose() {
+        // IMMEDIATELY stop all combat events and clean up UI
         this.isOpen = false;
+        this.turnState = 'waiting';
         
-        // Switch back to normal music
-        if (window.audioManager) {
-            window.audioManager.playNormalMusic();
+        // Force cleanup through CombatSystem first
+        if (this.combatSystem) {
+            this.combatSystem.forceCleanup();
         }
         
-        // Remove beforeunload protection
-        if (this.beforeUnloadHandler) {
-            window.removeEventListener('beforeunload', this.beforeUnloadHandler);
-            this.beforeUnloadHandler = null;
-        }
-        
-        // Reset critical madness when leaving arena
-        if (window.webSocketManager) {
-            window.webSocketManager.resetCriticalMadness();
-        }
-        
-        this.scene.input.off('pointerdown', this.criticalInputHandler);
-        this.spaceKey.off('down', this.dodgeInputHandler);
-        this.scene.input.off('wheel', this.handleScroll, this);
-        
-        // Force cleanup all timers and combat states
+        // Additional cleanup for arena-specific elements
         if (this.attackTimer) {
             this.attackTimer.destroy();
             this.attackTimer = null;
@@ -683,8 +744,14 @@ class Arena {
             this.defenseTimer = null;
         }
         
-        // Reset ALL combat system states
-        this.turnState = 'waiting';
+        // Force hide all UI elements
+        this.hideAttackUI();
+        this.hideDefenseUI();
+        
+        // Reset all combat states
+        this.currentFloor = 1;
+        this.totalCoinsEarned = 0;
+        this.currentEnemy = null;
         this.criticalSuccess = false;
         this.criticalBarPosition = 0;
         this.criticalBarDirection = 1;
@@ -694,25 +761,44 @@ class Arena {
         this.defenseTimeLeft = 0;
         this.dodgeClicked = false;
         
-        // Reset combat system status effects
-        if (this.combatSystem) {
-            this.combatSystem.statusEffects = { poisoned: 0, wounded: 0 };
+        if (window.webSocketManager) {
+            window.webSocketManager.resetCriticalMadness();
         }
         
-        // Hide all combat UI elements
-        this.hideAttackUI();
-        this.hideDefenseUI();
+        // Switch back to normal music
+        if (window.audioManager) {
+            window.audioManager.playNormalMusic();
+        }
         
-        // Stop distance checking
+        // Remove event listeners properly (but don't interfere with ESC key)
+        this.scene.input.off('pointerdown', this.criticalInputHandler);
+        if (this.spaceKey) {
+            this.spaceKey.off('down', this.dodgeInputHandler);
+        }
+        this.scene.input.off('wheel', this.handleScroll, this);
+        
+        // Ensure ESC key still works by not removing keyboard listeners globally
+        // The ESC key handler is managed by GameScene, not Arena
+        
+        // Remove beforeunload protection
+        if (this.beforeUnloadHandler) {
+            window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+            this.beforeUnloadHandler = null;
+        }
+        
+        // Clean up intervals
         if (this.updateInterval) {
             clearInterval(this.updateInterval);
             this.updateInterval = null;
         }
+        if (this.healthRegenTimer) {
+            clearInterval(this.healthRegenTimer);
+            this.healthRegenTimer = null;
+        }
         
-        this.resetDungeon();
+        this.combatLog.reset();
         this.elements.forEach(element => element.setVisible(false));
         
-        // Physics already running, no need to resume
         this.addCloseCooldown();
     }
 
@@ -738,8 +824,99 @@ class Arena {
     }
     
     start() {
-        if (!this.currentEnemy && this.currentFloor === 1 && this.totalCoinsEarned === 0) {
-            this.startDungeon();
+        console.log('🔥 START BUTTON CLICKED - start() called');
+        console.trace('🔥 CALL STACK:');
+        this.startDungeon();
+    }
+    
+    showEscapeConfirmation() {
+        const coinsLost = Math.floor(this.totalCoinsEarned * 0.2);
+        const coinsKept = this.totalCoinsEarned - coinsLost;
+        
+        const confirmBg = this.scene.add.graphics()
+            .fillStyle(0x000000, 0.8)
+            .fillRect(0, 0, 800, 600)
+            .setDepth(4000);
+            
+        const confirmBox = this.scene.add.graphics()
+            .fillStyle(0x2c3e50, 0.95)
+            .fillRoundedRect(150, 150, 500, 300, 10)
+            .lineStyle(2, 0xe74c3c, 1)
+            .strokeRoundedRect(150, 150, 500, 300, 10)
+            .setDepth(4001);
+            
+        const confirmText = this.scene.add.text(400, 220, 'Escape Arena?', {
+            fontSize: '20px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0.5).setDepth(4002);
+        
+        const detailText = this.scene.add.text(400, 280, `You will lose 20% of earned coins\n\nTotal: ${this.totalCoinsEarned} | Lost: ${coinsLost} | Keep: ${coinsKept}`, {
+            fontSize: '16px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(4002);
+        
+        const yesBtn = this.scene.add.text(320, 380, 'YES, ESCAPE', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0.5).setDepth(4002).setInteractive();
+        
+        const noBtn = this.scene.add.text(480, 380, 'STAY & FIGHT', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            backgroundColor: '#27ae60',
+            padding: { x: 15, y: 8 }
+        }).setOrigin(0.5).setDepth(4002).setInteractive();
+        
+        yesBtn.on('pointerdown', () => {
+            if (gameData?.addMoney) gameData.addMoney(coinsKept);
+            
+            this.combatLog.addLog('\n🏃 ESCAPED ARENA! 🏃', '#ffaa00');
+            this.combatLog.addColoredLog([
+                { text: 'Escaped with ', color: '#ffffff' },
+                { text: `${coinsKept} coins`, color: '#ffff00' },
+                { text: ` (lost ${coinsLost})`, color: '#ff6666' }
+            ]);
+            
+            if (gameData?.save) gameData.save();
+            
+            confirmBg.destroy();
+            confirmBox.destroy();
+            confirmText.destroy();
+            detailText.destroy();
+            yesBtn.destroy();
+            noBtn.destroy();
+            
+            this.scene.time.delayedCall(2000, () => this.forceClose());
+        });
+        
+        noBtn.on('pointerdown', () => {
+            confirmBg.destroy();
+            confirmBox.destroy();
+            confirmText.destroy();
+            detailText.destroy();
+            yesBtn.destroy();
+            noBtn.destroy();
+        });
+    }
+    
+    startHealthRegeneration() {
+        if (this.healthRegenTimer) {
+            clearInterval(this.healthRegenTimer);
         }
+        
+        this.healthRegenTimer = setInterval(() => {
+            const maxHealth = gameData?.stats?.maxHealth || 100;
+            if (gameData.stats.health < maxHealth) {
+                gameData.stats.health = Math.min(maxHealth, gameData.stats.health + 1);
+                if (gameData?.save) gameData.save();
+            } else {
+                clearInterval(this.healthRegenTimer);
+                this.healthRegenTimer = null;
+            }
+        }, 10000);
     }
 }

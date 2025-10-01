@@ -184,7 +184,7 @@ class Upgrades {
             // Save after upgrade purchase
             if (gameData?.save) gameData.save();
             this.showPurchaseMessage(`${upgrade.name} upgraded to tier ${currentTier + 1}!`);
-            this.updateButtons();
+            this.updateCards();
         } else {
             this.showPurchaseMessage('Not enough money!', '#ff0000');
         }

@@ -748,9 +748,15 @@ class GameScene extends Phaser.Scene {
         // ESC key for settings with memory management
         this.escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         if (window.memoryManager) {
-            window.memoryManager.addListener(this.escKey, 'down', () => this.settingsMenu.toggle(), this);
+            window.memoryManager.addListener(this.escKey, 'down', () => {
+                console.log('🔥 ESC KEY PRESSED - Settings menu toggle');
+                this.settingsMenu.toggle();
+            }, this);
         } else {
-            this.escKey.on('down', () => this.settingsMenu.toggle());
+            this.escKey.on('down', () => {
+                console.log('🔥 ESC KEY PRESSED - Settings menu toggle');
+                this.settingsMenu.toggle();
+            });
         }
 
         // Individual building collisions
@@ -779,6 +785,13 @@ class GameScene extends Phaser.Scene {
         
         // Initialize arena system
         this.arenaSystem = new Arena(this);
+        
+        // Force reset arena to initial state
+        this.arenaSystem.currentFloor = 1;
+        this.arenaSystem.currentHealth = 0;
+        this.arenaSystem.totalCoinsEarned = 0;
+        this.arenaSystem.currentEnemy = null;
+        this.arenaSystem.turnState = 'waiting';
         
         // Initialize Twitch chat
         this.twitchChat = new TwitchChat(this);

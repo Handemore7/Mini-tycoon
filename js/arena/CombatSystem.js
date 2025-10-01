@@ -4,6 +4,40 @@ class CombatSystem {
         this.statusEffects = { poisoned: 0, wounded: 0 };
     }
     
+    forceCleanup() {
+        // Force stop all combat timers and reset states
+        if (this.arena.attackTimer) {
+            this.arena.attackTimer.destroy();
+            this.arena.attackTimer = null;
+        }
+        if (this.arena.defenseTimer) {
+            this.arena.defenseTimer.destroy();
+            this.arena.defenseTimer = null;
+        }
+        
+        // Reset all critical attack states
+        this.criticalBarPosition = 0;
+        this.criticalBarDirection = 1;
+        this.criticalInputEnabled = false;
+        
+        // Force hide all UI elements
+        if (this.arena.attackBar) {
+            this.arena.attackBar.clear();
+            this.arena.attackBar.setVisible(false);
+        }
+        if (this.arena.defenseOverlay) {
+            this.arena.defenseOverlay.clear();
+            this.arena.defenseOverlay.setVisible(false);
+        }
+        if (this.arena.actionPrompt) {
+            this.arena.actionPrompt.setText('');
+            this.arena.actionPrompt.setVisible(false);
+        }
+        
+        // Reset status effects
+        this.statusEffects = { poisoned: 0, wounded: 0 };
+    }
+    
     getCriticalChance() {
         // Check if critical madness is active and used
         if (window.criticalMadnessActive && window.criticalMadnessUsed) {
@@ -275,10 +309,10 @@ class CombatSystem {
             ]);
         }
         
-        this.arena.currentHealth -= damage;
+        gameData.stats.health -= damage;
         
-        if (this.arena.currentHealth <= 0) {
-            this.arena.currentHealth = 0;
+        if (gameData.stats.health <= 0) {
+            gameData.stats.health = 0;
             this.arena.gameOver();
         } else {
             this.arena.scene.time.delayedCall(1000, () => this.arena.startPlayerTurn());
@@ -290,7 +324,7 @@ class CombatSystem {
     applyStatusEffects() {
         if (this.statusEffects.poisoned > 0) {
             const poisonDamage = 3;
-            this.arena.currentHealth -= poisonDamage;
+            gameData.stats.health -= poisonDamage;
             this.arena.combatLog.addColoredLog([
                 { text: '🐍 Poison deals ', color: '#99ff99' },
                 { text: `${poisonDamage} damage!`, color: '#ff6666' }
@@ -317,8 +351,8 @@ class CombatSystem {
             }
         }
         
-        if (this.arena.currentHealth <= 0) {
-            this.arena.currentHealth = 0;
+        if (gameData.stats.health <= 0) {
+            gameData.stats.health = 0;
             this.arena.gameOver();
         }
     }

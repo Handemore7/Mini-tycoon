@@ -133,7 +133,7 @@ class DebugConsole {
         });
 
         // Row 2: Equipment & Stats
-        this.maxEquipBtn = this.createButton(80, buttonY + 40, 'Max Equipment', () => {
+        this.maxEquipBtn = this.createButton(95, buttonY + 40, 'Max Equipment', () => {
             this.executeWithErrorHandling(() => {
                 gameData.inventory.sword = 5;
                 gameData.inventory.shield = 5;
@@ -144,7 +144,7 @@ class DebugConsole {
             });
         });
 
-        this.maxUpgradesBtn = this.createButton(180, buttonY + 40, 'Max Upgrades', () => {
+        this.maxUpgradesBtn = this.createButton(190, buttonY + 40, 'Max Upgrades', () => {
             this.executeWithErrorHandling(() => {
                 gameData.upgrades.boots = 10;
                 gameData.upgrades.passiveIncome = 10;
@@ -157,7 +157,7 @@ class DebugConsole {
             });
         });
 
-        this.maxHealthBtn = this.createButton(280, buttonY + 40, 'Max Health', () => {
+        this.maxHealthBtn = this.createButton(285, buttonY + 40, 'Max Health', () => {
             this.executeWithErrorHandling(() => {
                 gameData.stats.health = 9999;
                 gameData.stats.maxHealth = 9999;
@@ -174,7 +174,7 @@ class DebugConsole {
             });
         });
 
-        this.maxArmorBtn = this.createButton(480, buttonY + 40, 'Max Armor', () => {
+        this.maxArmorBtn = this.createButton(475, buttonY + 40, 'Max Armor', () => {
             this.executeWithErrorHandling(() => {
                 gameData.stats.armor = 999;
                 gameData.save();
@@ -182,7 +182,7 @@ class DebugConsole {
             });
         });
 
-        this.maxSpeedBtn = this.createButton(580, buttonY + 40, 'Max Speed', () => {
+        this.maxSpeedBtn = this.createButton(570, buttonY + 40, 'Max Speed', () => {
             this.executeWithErrorHandling(() => {
                 gameData.stats.moveSpeed = 999;
                 gameData.save();
@@ -191,7 +191,7 @@ class DebugConsole {
         });
 
         // Row 3: Advanced Stats
-        this.maxCritBtn = this.createButton(80, buttonY + 80, 'Max Crit', () => {
+        this.maxCritBtn = this.createButton(95, buttonY + 80, 'Max Crit', () => {
             this.executeWithErrorHandling(() => {
                 gameData.stats.criticalChance = 100;
                 gameData.save();
@@ -199,7 +199,7 @@ class DebugConsole {
             });
         });
 
-        this.maxAttackSpeedBtn = this.createButton(180, buttonY + 80, 'Max Att.Speed', () => {
+        this.maxAttackSpeedBtn = this.createButton(190, buttonY + 80, 'Max Att.Speed', () => {
             this.executeWithErrorHandling(() => {
                 gameData.stats.attackSpeed = 10;
                 gameData.save();
@@ -207,7 +207,7 @@ class DebugConsole {
             });
         });
 
-        this.testConnectionBtn = this.createButton(280, buttonY + 80, 'Test WebSocket', () => {
+        this.testConnectionBtn = this.createButton(285, buttonY + 80, 'Test WebSocket', () => {
             this.executeWithErrorHandling(() => {
                 if (window.webSocketManager) {
                     const status = window.webSocketManager.connected ? 'Connected' : 'Disconnected';
@@ -228,7 +228,7 @@ class DebugConsole {
             });
         });
 
-        this.runTestsBtn = this.createButton(480, buttonY + 80, 'Run Tests', () => {
+        this.runTestsBtn = this.createButton(475, buttonY + 80, 'Run Tests', () => {
             this.executeWithErrorHandling(() => {
                 if (window.testFramework) {
                     window.testFramework.runTests();
@@ -239,7 +239,7 @@ class DebugConsole {
             });
         });
 
-        this.clearDataBtn = this.createButton(580, buttonY + 80, 'Clear Data', () => {
+        this.clearDataBtn = this.createButton(570, buttonY + 80, 'Clear Data', () => {
             this.executeWithErrorHandling(() => {
                 if (confirm('Clear all game data? This cannot be undone!')) {
                     localStorage.clear();
@@ -249,7 +249,7 @@ class DebugConsole {
         });
 
         // Row 4: System & Utility
-        this.tutorialBtn = this.createButton(80, buttonY + 120, 'Restart Tutorial', () => {
+        this.tutorialBtn = this.createButton(95, buttonY + 120, 'Restart Tutorial', () => {
             this.executeWithErrorHandling(() => {
                 if (window.Tutorial) {
                     Tutorial.restart();
@@ -259,7 +259,7 @@ class DebugConsole {
             });
         });
 
-        this.resetBtn = this.createButton(180, buttonY + 120, 'Reset Stats', () => {
+        this.resetBtn = this.createButton(190, buttonY + 120, 'Reset Stats', () => {
             this.executeWithErrorHandling(() => {
                 gameData.money = 100;
                 gameData.stats = {
@@ -280,7 +280,7 @@ class DebugConsole {
             });
         });
 
-        this.monitorBtn = this.createButton(280, buttonY + 120, 'System Monitor', () => {
+        this.monitorBtn = this.createButton(285, buttonY + 120, 'System Monitor', () => {
             this.executeWithErrorHandling(() => {
                 this.showSystemMonitor();
             });
@@ -297,7 +297,7 @@ class DebugConsole {
             });
         });
 
-        this.memoryCleanupBtn = this.createButton(480, buttonY + 120, 'Memory Cleanup', () => {
+        this.memoryCleanupBtn = this.createButton(475, buttonY + 120, 'Memory Cleanup', () => {
             this.executeWithErrorHandling(() => {
                 if (window.memoryManager) {
                     window.memoryManager.forceCleanup();
@@ -308,24 +308,24 @@ class DebugConsole {
             });
         });
 
-        this.exitBtn = this.createButton(580, buttonY + 120, 'Exit', () => {
+        this.exitBtn = this.createButton(570, buttonY + 120, 'Exit', () => {
             this.toggle();
         });
 
         // Row 5: WebSocket Event Triggers
-        this.coinRainBtn = this.createButton(80, buttonY + 160, 'Coin Rain', () => {
+        this.coinRainBtn = this.createButton(95, buttonY + 160, 'Coin Rain', () => {
             this.executeWithErrorHandling(() => {
                 this.triggerWebSocketEvent('coin_rain');
             });
         });
 
-        this.speedChallengeBtn = this.createButton(180, buttonY + 160, 'Speed Challenge', () => {
+        this.speedChallengeBtn = this.createButton(190, buttonY + 160, 'Speed Challenge', () => {
             this.executeWithErrorHandling(() => {
                 this.triggerWebSocketEvent('speed_challenge');
             });
         });
 
-        this.criticalMadnessBtn = this.createButton(280, buttonY + 160, 'Critical Madness', () => {
+        this.criticalMadnessBtn = this.createButton(285, buttonY + 160, 'Critical Madness', () => {
             this.executeWithErrorHandling(() => {
                 this.triggerWebSocketEvent('critical_madness');
             });
@@ -337,7 +337,7 @@ class DebugConsole {
             });
         });
 
-        this.reloadPageBtn = this.createButton(480, buttonY + 160, 'Reload Page', () => {
+        this.reloadPageBtn = this.createButton(475, buttonY + 160, 'Reload Page', () => {
             this.executeWithErrorHandling(() => {
                 if (confirm('Reload the page? Unsaved changes will be lost.')) {
                     window.location.reload();
@@ -345,7 +345,7 @@ class DebugConsole {
             });
         });
 
-        this.togglePhysicsBtn = this.createButton(580, buttonY + 160, 'Toggle Physics', () => {
+        this.togglePhysicsBtn = this.createButton(570, buttonY + 160, 'Toggle Physics', () => {
             this.executeWithErrorHandling(() => {
                 if (this.scene.physics.world.isPaused) {
                     this.scene.physics.resume();
