@@ -1,8 +1,9 @@
 # Mini Tycoon
 
 A browser-based 2D pixel art tycoon game with real-time multiplayer events and Twitch integration.
+You can check it on: https://handemore7.github.io/Mini-tycoon/
 
-![Game Screenshot](image1.png)
+![Game Screenshot](assets/screenshots/image1.png)
 *Image #1: Main game world with buildings and player character*
 
 ## 🎮 What is Mini Tycoon?
@@ -19,7 +20,7 @@ Build your empire through strategic purchases, combat, and community interaction
 - **💾 Cloud Save**: Your progress is automatically saved to the cloud
 - **🏆 Achievements**: Unlock special decorations through gameplay milestones
 
-![Arena System](image2.png)
+![Arena System](assets/screenshots/image2.png)
 *Image #2: Arena combat system with turn-based battles*
 
 ## 🎯 How to Play
@@ -42,7 +43,7 @@ Build your empire through strategic purchases, combat, and community interaction
 - **Arena**: Bonus coins from victories
 - **Events**: Special community events
 
-![Store Interface](image3.png)
+![Store Interface](assets/screenshots/image3.png)
 *Image #3: Modern store interface with equipment upgrades*
 
 ## 🏗️ Buildings
@@ -60,7 +61,7 @@ Experience community-driven events:
 - **🏃 Speed Challenge**: Temporary movement speed boost
 - **⚡ Critical Madness**: Increased critical hit chance
 
-![Event System](image4.png)
+![Event System](assets/screenshots/image4.png)
 *Image #4: Real-time event notifications and voting system*
 
 ## 🚀 Quick Start
@@ -79,12 +80,6 @@ Experience community-driven events:
 - **Internet**: Required for cloud saves and real-time events
 - **Storage**: ~50MB for game assets
 - **No installation needed**
-
-![Tutorial System](image5.png)
-*Image #5: Interactive tutorial guiding new players*
-
-![Settings Menu](image6.png)
-*Image #6: Settings menu with audio controls and game options*
 
 ## 🛠️ Technical Details
 
