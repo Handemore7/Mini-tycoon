@@ -92,51 +92,143 @@ class UI {
             
             // Get Twitch credentials from config
             const CLIENT_ID = window.CONFIG?.twitch?.clientId;
-            const ACCESS_TOKEN = window.CONFIG?.twitch?.accessToken;
             
-            if (!CLIENT_ID || !ACCESS_TOKEN) {
-                console.log('Twitch profile pictures disabled in public version');
+            if (!CLIENT_ID) {
+                console.log('Twitch client ID not configured');
                 return;
             }
             
-            const response = await fetch(`https://api.twitch.tv/helix/users?login=${username}`, {
-                headers: {
-                    'Client-ID': CLIENT_ID,
-                    'Authorization': `Bearer ${ACCESS_TOKEN}`
-                }
-            });
+            // Try multiple methods to get Twitch profile picture
+            const profileUrl = await this.getTwitchProfileUrl(username);
             
-            if (response.ok) {
-                const data = await response.json();
-                if (data.data && data.data[0]) {
-                    const profileUrl = data.data[0].profile_image_url;
-                    
-                    // Método directo con Image object
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    img.onload = () => {
-                        // Crear textura desde imagen
-                        this.scene.textures.addImage(`twitch_pfp_${username}`, img);
-                        
-                        // Remover del contenedor antes de destruir
-                        this.twitchContainer.remove(this.twitchPfp);
-                        this.twitchPfp.destroy();
-                        
-                        // Crear nueva imagen en la misma posición (0,0 relativo al contenedor)
-                        this.twitchPfp = this.scene.add.image(0, 0, `twitch_pfp_${username}`)
-                            .setDisplaySize(40, 40)
-                            .setOrigin(0.5)
-                            .setVisible(true);
-                        
-                        // Agregar al contenedor
-                        this.twitchContainer.add(this.twitchPfp);
-                    };
-                    img.src = profileUrl;
-                }
+            if (profileUrl) {
+                this.loadProfileImage(username, profileUrl);
+            } else {
+                this.setGenericTwitchAvatar(username);
             }
         } catch (error) {
             console.log('Error loading Twitch profile:', error);
+            this.setGenericTwitchAvatar(username);
         }
+    }
+
+    async getTwitchProfileUrl(username) {
+        // Method 1: Try public Twitch API services
+        const methods = [
+            // Decapi.me - Public Twitch API proxy
+            `https://decapi.me/twitch/avatar/${username}`,
+            // Twitch Insights API (sometimes works)
+            `https://api.twitch.tv/kraken/users/${username}`,
+            // Alternative services
+            `https://twitchtracker.com/api/channels/${username}`
+        ];
+        
+        for (const url of methods) {
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.text();
+                    
+                    // Decapi returns direct image URL
+                    if (url.includes('decapi.me') && data.startsWith('https://')) {
+                        return data.trim();
+                    }
+                    
+                    // Try parsing as JSON for other APIs
+                    try {
+                        const jsonData = JSON.parse(data);
+                        if (jsonData.logo) return jsonData.logo;
+                        if (jsonData.avatar_url) return jsonData.avatar_url;
+                        if (jsonData.profile_image_url) return jsonData.profile_image_url;
+                    } catch (e) {
+                        // Not JSON, continue
+                    }
+                }
+            } catch (error) {
+                console.log(`Failed method: ${url}`);
+            }
+        }
+        
+        // Method 2: Try direct Twitch CDN pattern (sometimes works)
+        const possibleUrls = [
+            `https://static-cdn.jtvnw.net/jtv_user_pictures/${username}-profile_image-300x300.png`,
+            `https://static-cdn.jtvnw.net/jtv_user_pictures/${username}-profile_image-150x150.png`
+        ];
+        
+        for (const url of possibleUrls) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                if (response.ok) {
+                    return url;
+                }
+            } catch (error) {
+                // Continue to next URL
+            }
+        }
+        
+        return null;
+    }
+    
+    loadProfileImage(username, profileUrl) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = () => {
+            // Create texture from image
+            this.scene.textures.addImage(`twitch_pfp_${username}`, img);
+            
+            // Remove existing pfp
+            this.twitchContainer.remove(this.twitchPfp);
+            this.twitchPfp.destroy();
+            
+            // Create new image
+            this.twitchPfp = this.scene.add.image(0, 0, `twitch_pfp_${username}`)
+                .setDisplaySize(40, 40)
+                .setOrigin(0.5)
+                .setVisible(true);
+            
+            // Add to container
+            this.twitchContainer.add(this.twitchPfp);
+            
+            console.log(`✅ Loaded Twitch profile for ${username}`);
+        };
+        
+        img.onerror = () => {
+            console.log(`❌ Failed to load image for ${username}`);
+            this.setGenericTwitchAvatar(username);
+        };
+        
+        img.src = profileUrl;
+    }
+
+    setGenericTwitchAvatar(username) {
+        // Create a colored circle with first letter of username
+        const firstLetter = username.charAt(0).toUpperCase();
+        const colors = [0x9146ff, 0x00ff88, 0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xf9ca24];
+        const color = colors[username.length % colors.length];
+        
+        // Remove existing pfp
+        this.twitchContainer.remove(this.twitchPfp);
+        this.twitchPfp.destroy();
+        
+        // Create new avatar with letter
+        const graphics = this.scene.add.graphics()
+            .fillStyle(color)
+            .fillCircle(0, 0, 20)
+            .lineStyle(2, 0xffffff)
+            .strokeCircle(0, 0, 20);
+            
+        const letterText = this.scene.add.text(0, 0, firstLetter, {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        // Create container for avatar
+        this.twitchPfp = this.scene.add.container(0, 0, [graphics, letterText]);
+        this.twitchContainer.add(this.twitchPfp);
+        
+        console.log(`✅ Generic avatar created for ${username}`);
     }
 
     update() {

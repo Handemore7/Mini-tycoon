@@ -35,6 +35,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 
 - **Setup**: Enter your exact Twitch username as player name
 - **Streamer**: Choose which Twitch channel to monitor (defaults to your_streamer_name)
+- **Profile Pictures**: Real Twitch avatars loaded via public APIs with fallback to generic avatars
 - **Rewards**: Earn 10 coins for each chat message you send
 - **Anti-Spam**: 2-second cooldown between rewards to prevent abuse
 - **Feedback**: Visual notifications for successful rewards and spam attempts
@@ -71,6 +72,10 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 ✅ Purchase feedback and inventory management
 ✅ Cloud save system with Firebase Firestore
 ✅ Automatic data synchronization across devices
+✅ Twitch profile pictures with multi-API fallback system
+✅ Secure credential management for public deployment
+✅ Input validation and data sanitization
+✅ Cross-origin image loading with error handling
 ✅ Upgrades system with 10-tier progression
 ✅ Character upgrade mechanics (speed, income, chat bonus)
 ✅ Profile deletion functionality
@@ -134,10 +139,11 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - 🪙 **Coin icon** with money count (top-left)
 - **Player name** displayed above character
 - **Health bar** under character with color coding (green/yellow/red)
-- **Twitch profile** with streamer info (top-right)
+- **Twitch profile** with real profile pictures and streamer info (top-right)
 - **Inventory panel** with C key toggle (right-side)
 - **Minimal HUD** for clean gameplay experience
 - **Dynamic elements** that follow player movement
+- **Smart avatars** with multiple fallback methods for profile pictures
 
 ## Database Security
 
@@ -148,6 +154,30 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Write permissions**: Players can only write to their own documents
 - **Secure by default**: No public access to sensitive data
 
+## Twitch Profile System
+
+**Multi-Method Profile Loading:**
+- **Decapi.me API**: Primary public Twitch API proxy
+- **Legacy Twitch APIs**: Kraken API fallback for older accounts
+- **Direct CDN**: Twitch static CDN pattern matching
+- **Generic Avatars**: Colorful letter-based avatars as final fallback
+- **Cross-Origin Support**: Secure image loading with CORS handling
+- **Error Resilience**: Graceful degradation if all methods fail
+
+## Security Features
+
+**Client-Side Security:**
+- **Input validation**: Player names restricted to alphanumeric + underscore (3-20 chars)
+- **Data sanitization**: All data cleaned before Firebase storage
+- **XSS prevention**: No user-generated HTML content
+- **API safety**: Only public APIs used, no sensitive tokens exposed
+
+**Database Security:**
+- **Firestore rules**: Server-side validation and access control
+- **Player isolation**: Users can only access their own data
+- **Name consistency**: playerName must match document ID
+- **Rate limiting**: Natural protection via Firebase quotas
+
 ## Next Steps
 
 1. Develop arena/fighting system with automated combat
@@ -157,6 +187,7 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 5. Add more decoration types and furniture options
 6. Create achievement system with unlock rewards
 7. Add multiplayer features with real-time synchronization
+8. Implement Twitch OAuth for enhanced profile features
 
 ## Cloud Save System
 
@@ -201,11 +232,13 @@ A 2D pixel art tycoon game designed to encourage Twitch chat engagement.
 - **Frontend**: Phaser.js 3.70.0 for 2D game engine
 - **Database**: Firebase Firestore with localStorage fallback
 - **Twitch**: WebSocket connection to Twitch IRC (wss://irc-ws.chat.twitch.tv:443)
+- **Profile System**: Multi-API Twitch avatar loading with smart fallbacks
 - **UI System**: Immersive character-attached interface elements
 - **Assets**: Simple colored rectangles as placeholder sprites
 - **Architecture**: Modular JavaScript classes for easy expansion
 - **Cloud Storage**: Firebase Firestore with real-time synchronization
-- **Profile Pictures**: Framework ready for Twitch API integration
+- **Security**: Input validation, data sanitization, and secure API usage
 - **Sprites**: Generated using [PixelLab.ai](https://www.pixellab.ai/)
 - **Inventory**: Persistent 2x6 grid system with item management
 - **Debug Tools**: Konami Code activation with comprehensive controls
+- **Deployment**: GitHub Pages with secure credential management
