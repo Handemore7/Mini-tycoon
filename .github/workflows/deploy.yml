@@ -8,13 +8,18 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     
     steps:
     - uses: actions/checkout@v3
     
     - name: Create config.js from secrets
       run: |
-        cat > js/config.js << EOF
+        mkdir -p js
+        cat > js/config.js << 'EOF'
         const CONFIG = {
           firebase: {
             apiKey: "${{ secrets.FIREBASE_API_KEY }}",
@@ -32,9 +37,15 @@ jobs:
         };
         window.CONFIG = CONFIG;
         EOF
+        
+    - name: Verify config.js was created
+      run: |
+        ls -la js/
+        cat js/config.js
     
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
+        publish_dir: .
+        force_orphan: true
