@@ -27,6 +27,29 @@ class Building extends Phaser.Physics.Arcade.Sprite {
             backgroundColor: '#000000',
             padding: { x: 4, y: 2 }
         }).setOrigin(0.5);
+
+        // Ensure the label is always rendered above the building sprite and follows its position
+        // Set initial depth and keep label one level above
+        const baseDepth = 500;
+        this.setDepth(baseDepth);
+        this.label.setDepth(baseDepth + 1);
+
+        // Wrap setDepth so external calls (tutorial highlighting) also update the label depth
+        const originalSetDepth = this.setDepth.bind(this);
+        this.setDepth = (d) => {
+            originalSetDepth(d);
+            if (this.label) this.label.setDepth(d + 1);
+            return this;
+        };
+    }
+
+    preUpdate(time, delta) {
+        // Keep the label positioned above the building in case the building moves or depth changes
+        if (this.label) {
+            this.label.setPosition(this.x, this.y - 40);
+        }
+        // Call parent preUpdate if present
+        if (super.preUpdate) super.preUpdate(time, delta);
     }
 
     interact(scene) {

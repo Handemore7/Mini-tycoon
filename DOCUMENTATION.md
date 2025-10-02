@@ -46,6 +46,11 @@ A sophisticated 2D pixel art tycoon game with enterprise-level architecture, des
 - Memory-efficient caching
 - Fallback handling for missing assets
 
+### Asset Attribution
+- Visual assets (sprites, icons) were created using PixelLab: https://www.pixellab.ai/
+- Music and audio tracks were created using Udio: https://www.udio.com/
+
+
 ### **Testing Framework**
 - Unit testing with describe/it/expect syntax with error sanitization
 - Mock utilities for game component testing

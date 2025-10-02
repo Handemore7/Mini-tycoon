@@ -119,4 +119,8 @@ Experience community-driven events:
 - Comprehensive error handling and logging
 - Cross-platform compatibility
 
+### Asset Attribution
+- Visual assets were created using PixelLab: https://www.pixellab.ai/
+- Music and audio were created using Udio: https://www.udio.com/
+
 For detailed technical documentation, see [DOCUMENTATION.md](DOCUMENTATION.md).
