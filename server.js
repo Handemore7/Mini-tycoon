@@ -137,7 +137,7 @@ function triggerServerVote(data = {}) {
     const voteData = {
         eventId,
         type: 'server_vote',
-        question: data.question || "¿Cuál debería ser el próximo evento?",
+        question: data.question || "Which event should be next?",
         options: data.options || [
             { name: "Coin Rain" },
             { name: "Speed Challenge" },

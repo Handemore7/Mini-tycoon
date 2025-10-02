@@ -21,7 +21,7 @@ class WebSocketManager {
             this.socket.on('connect', () => {
                 this.connected = true;
                 console.log('✅ WebSocket: Connected to server', this.socket.id);
-                this.showNotification('🌐 Conectado al servidor', 'success');
+                this.showNotification('🌐 Connected to server', 'success');
                 
                 // Request active events on every connection/reconnection
                 console.log('📫 WebSocket: Requesting active events on connect');
@@ -31,7 +31,7 @@ class WebSocketManager {
             this.socket.on('disconnect', () => {
                 this.connected = false;
                 console.log('❌ WebSocket: Disconnected from server');
-                this.showNotification('❌ Desconectado del servidor', 'warning');
+                this.showNotification('❌ Disconnected from server', 'warning');
             });
             
             this.socket.on('connect_error', (error) => {
@@ -135,7 +135,7 @@ class WebSocketManager {
         
         this.createEventNotification(
             eventId,
-            '🗳️ Votación del Servidor',
+            '🗳️ Server Vote',
             question,
             duration,
             'vote'
@@ -156,7 +156,7 @@ class WebSocketManager {
         voteContainer.id = 'vote-container';
         voteContainer.innerHTML = `
             <div class="vote-popup">
-                <h3>🗳️ Votación del Servidor</h3>
+                <h3>🗳️ Server Vote</h3>
                 <p>${this.sanitizeHTML(question)}</p>
                 <div class="vote-options">
                     ${options.map((option, index) => `
@@ -165,7 +165,7 @@ class WebSocketManager {
                         </button>
                     `).join('')}
                 </div>
-                <div class="vote-timer">Tiempo restante: <span id="vote-countdown">${Math.ceil(duration / 1000)}</span>s</div>
+                <div class="vote-timer">Time left: <span id="vote-countdown">${Math.ceil(duration / 1000)}</span>s</div>
             </div>
         `;
         
@@ -290,8 +290,8 @@ class WebSocketManager {
         if (actualDuration >= 5000) {
             this.createEventNotification(
                 eventId,
-                '🌧️ Lluvia de Monedas',
-                '¡Recoge las monedas doradas! +5 monedas cada una',
+                '🌧️ Coin Rain',
+                'Collect the golden coins! +5 coins each',
                 actualDuration,
                 'coin-rain'
             );
@@ -329,7 +329,7 @@ class WebSocketManager {
             
             // Warning at 10 seconds
             setTimeout(() => {
-                this.showNotification('⚠️ Las monedas desaparecerán en 5 segundos', 'warning');
+                this.showNotification('⚠️ Coins will disappear in 5 seconds', 'warning');
             }, 10000);
             
             // Remove remaining coins after 15 seconds total
@@ -462,7 +462,7 @@ class WebSocketManager {
             this.createEventNotification(
                 eventId,
                 '⚡ Critical Madness',
-                'Entra al arena para obtener 100% probabilidad crítica',
+                'Enter the arena for a 100% critical chance',
                 actualDuration,
                 'critical'
             );
@@ -493,8 +493,8 @@ class WebSocketManager {
     endCriticalMadness(eventId) {
         this.activeEvents.delete(eventId);
         window.criticalMadnessActive = false;
-        console.log('⚡ WebSocket: Critical Madness deactivated globally');
-        this.showNotification('⚡ Critical Madness terminado', 'info');
+    console.log('⚡ WebSocket: Critical Madness deactivated globally');
+    this.showNotification('⚡ Critical Madness ended', 'info');
     }
 
     // SPEED CHALLENGE EVENT
@@ -514,7 +514,7 @@ class WebSocketManager {
             this.createEventNotification(
                 eventId,
                 '🏃 Speed Challenge',
-                `Velocidad aumentada x${speedMultiplier}. ¡Muévete más rápido!`,
+                `Speed increased x${speedMultiplier}. Move faster!`,
                 actualDuration,
                 'speed'
             );
@@ -547,7 +547,7 @@ class WebSocketManager {
             gameData.stats.speed = event.originalSpeed;
         }
         this.activeEvents.delete(eventId);
-        this.showNotification('🏃 Speed Challenge terminado', 'info');
+    this.showNotification('🏃 Speed Challenge ended', 'info');
     }
 
     // UTILITY METHODS
@@ -561,6 +561,7 @@ class WebSocketManager {
     }
     
     sanitizeHTML(str) {
+        // Properly escape HTML to prevent XSS
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
@@ -695,7 +696,7 @@ class WebSocketManager {
                 event.used = true;
                 window.criticalMadnessUsed = true;
                 console.log('⚡ WebSocket: Critical Madness used in arena');
-                this.showNotification('⚡ Critical Madness aplicado - 80% crítico en combate', 'success');
+                this.showNotification('⚡ Critical Madness applied - 80% critical in combat', 'success');
                 
                 // Update notification to show (used) and minimize
                 this.updateCriticalMadnessNotification();
@@ -717,7 +718,7 @@ class WebSocketManager {
                 titleElement.textContent = '⚡ Critical Madness (USED)';
             }
             if (descriptionElement) {
-                descriptionElement.textContent = 'Efecto aplicado en el arena - 80% probabilidad crítica';
+                descriptionElement.textContent = 'Effect applied in the arena - 80% critical chance';
             }
             
             // Auto-minimize after showing used status

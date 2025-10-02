@@ -81,6 +81,29 @@ Experience community-driven events:
 - **Storage**: ~50MB for game assets
 - **No installation needed**
 
+## 🐛 Known Bugs
+- WebSocket reconnects can be slow on flaky networks; occasional duplicate events may appear for a few seconds.
+- Some asset load failures are silently logged in the console (check browser devtools → Console) — missing images fall back to placeholders.
+- Passive income change: saved `passiveIncome` values now represent coins/second; existing players may see higher income.
+- Minor visual overlap in the debug console on small screens; works correctly on desktop resolutions.
+- Hide interaction buttons while crit attack or defense events
+- Crit attack event appears and stays in the screen until the event is triggered again
+- Menu after receiving damage is not accessible
+- Decoration building (It fails when the achievements are not completed in order)
+
+## 🚧 Future Features (Ideas)
+- Mobile/touch support: responsive UI and on-screen controls for phones and tablets.
+- Translate to other languages
+- Leaderboards and global player profiles synced to Firestore.
+- Visits to another player's worlds
+- OAuth Twitch integration for secure streamer linking and subscriber-only features.
+- Lightweight sprite atlas and WebP assets for faster loads and lower bandwidth.
+- Matchmaking or asynchronous multiplayer features (trade, raids, co-op events).
+- More arena mechanics: status-resistance, multi-target attacks, and unique boss phases.
+- Add gameplay system of wave clears (vampire survivor style) for those players in the guild that doesn't like the actual gameplay
+- Weekly challenges in Arena
+- More community driven events
+
 ## 🛠️ Technical Details
 
 **Built with:**

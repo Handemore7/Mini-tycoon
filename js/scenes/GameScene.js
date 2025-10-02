@@ -4,8 +4,11 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // Don't show loading screen during initial preload
-        // Loading screen will be shown only when user is logged in and tutorial is complete
+        // Show loading screen during initial asset loading for all users
+        if (window.loadingScreen) {
+            window.loadingScreen.show();
+            window.loadingScreen.updateProgress(10, 'Loading assets...');
+        }
         
         // Start asset preloading
         if (window.assetPreloader) {
@@ -45,11 +48,25 @@ class GameScene extends Phaser.Scene {
         // Enhanced error handling
         this.load.on('loaderror', (file) => {
             window.errorLogger?.error('Failed to load asset:', file.src);
+            if (window.loadingScreen) {
+                window.loadingScreen.showError('Failed to load game assets. Please refresh the page.');
+            }
         });
         
         this.load.on('progress', (progress) => {
             window.errorLogger?.trackPerformance('assetLoadProgress', progress * 100);
-            // Don't update loading screen during initial asset loading
+            // Update loading screen during asset loading
+            if (window.loadingScreen) {
+                const progressPercent = 10 + (progress * 40); // 10-50% for asset loading
+                window.loadingScreen.updateProgress(progressPercent, 'Loading assets...');
+            }
+        });
+        
+        this.load.on('complete', () => {
+            // Asset loading complete
+            if (window.loadingScreen) {
+                window.loadingScreen.updateProgress(50, 'Assets loaded, initializing game...');
+            }
         });
     }
     
@@ -112,12 +129,9 @@ class GameScene extends Phaser.Scene {
     }
     
     async loadPlayerData() {
-        // Only show loading screen if user is logged in and tutorial is complete
-        const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
-        const shouldShowLoading = gameData.playerName && tutorialCompleted;
-        
-        if (shouldShowLoading && window.loadingScreen) {
-            window.loadingScreen.show();
+        // Continue showing loading screen during database loading
+        // (it's already shown from preload phase)
+        if (window.loadingScreen && window.loadingScreen.isVisible) {
             window.loadingScreen.updateProgress(60, 'Connecting to database...');
         }
         
@@ -132,14 +146,14 @@ class GameScene extends Phaser.Scene {
                 }
             }
             
-            if (shouldShowLoading && window.loadingScreen) {
+            if (window.loadingScreen && window.loadingScreen.isVisible) {
                 window.loadingScreen.updateProgress(80, 'Initializing game systems...');
             }
             
             this.initializeGame();
         } catch (error) {
             console.error('Failed to load player data:', error);
-            if (shouldShowLoading && window.loadingScreen) {
+            if (window.loadingScreen && window.loadingScreen.isVisible) {
                 window.loadingScreen.showError('Failed to connect to database. Check your internet connection.');
             } else {
                 // Fallback for users without loading screen
@@ -149,6 +163,11 @@ class GameScene extends Phaser.Scene {
     }
 
     showNamePrompt() {
+        // Hide loading screen if visible
+        if (window.loadingScreen && window.loadingScreen.isVisible) {
+            window.loadingScreen.hide();
+        }
+        
         // Pause physics
         this.physics.pause();
         
@@ -855,11 +874,8 @@ class GameScene extends Phaser.Scene {
         window.Tutorial.instance = this.tutorial; // Global reference
         
         try {
-            // Only hide loading screen if it was shown
-            const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
-            const shouldShowLoading = gameData.playerName && tutorialCompleted;
-            
-            if (shouldShowLoading && window.loadingScreen) {
+            // Hide loading screen since game is now ready
+            if (window.loadingScreen && window.loadingScreen.isVisible) {
                 window.loadingScreen.updateProgress(100, 'Ready to play!');
                 setTimeout(() => {
                     window.loadingScreen.hide();
@@ -867,10 +883,7 @@ class GameScene extends Phaser.Scene {
             }
         } catch (error) {
             console.error('Game initialization failed:', error);
-            const tutorialCompleted = localStorage.getItem('miniTycoon_tutorialCompleted') === 'true';
-            const shouldShowLoading = gameData.playerName && tutorialCompleted;
-            
-            if (shouldShowLoading && window.loadingScreen) {
+            if (window.loadingScreen && window.loadingScreen.isVisible) {
                 window.loadingScreen.showError('Game initialization failed. Please refresh to try again.');
             }
         }
