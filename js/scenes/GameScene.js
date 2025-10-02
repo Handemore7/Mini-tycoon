@@ -7,7 +7,7 @@ class GameScene extends Phaser.Scene {
         // Show loading screen during initial asset loading for all users
         if (window.loadingScreen) {
             window.loadingScreen.show();
-            window.loadingScreen.updateProgress(10, 'Loading assets...');
+            window.loadingScreen.updateProgress(0, 'Loading assets...');
         }
         
         // Start asset preloading
@@ -63,9 +63,11 @@ class GameScene extends Phaser.Scene {
         });
         
         this.load.on('complete', () => {
-            // Asset loading complete
+            // Asset loading complete - finalize loading screen and hide
             if (window.loadingScreen) {
-                window.loadingScreen.updateProgress(50, 'Assets loaded, initializing game...');
+                window.loadingScreen.updateProgress(100, 'Assets loaded');
+                // small delay so users can see 100%
+                setTimeout(() => window.loadingScreen.hide(), 250);
             }
         });
     }
@@ -129,12 +131,7 @@ class GameScene extends Phaser.Scene {
     }
     
     async loadPlayerData() {
-        // Continue showing loading screen during database loading
-        // (it's already shown from preload phase)
-        if (window.loadingScreen && window.loadingScreen.isVisible) {
-            window.loadingScreen.updateProgress(60, 'Connecting to database...');
-        }
-        
+        // Load player data (don't block the loading screen further)
         try {
             if (window.database && gameData.playerName) {
                 console.log('🔄 Loading player data from database...');
@@ -145,28 +142,18 @@ class GameScene extends Phaser.Scene {
                     console.log('ℹ️ No database data found, using local data');
                 }
             }
-            
-            if (window.loadingScreen && window.loadingScreen.isVisible) {
-                window.loadingScreen.updateProgress(80, 'Initializing game systems...');
-            }
-            
+
+            // Initialize game regardless of DB timing; avoid extending the loading overlay
             this.initializeGame();
         } catch (error) {
             console.error('Failed to load player data:', error);
-            if (window.loadingScreen && window.loadingScreen.isVisible) {
-                window.loadingScreen.showError('Failed to connect to database. Check your internet connection.');
-            } else {
-                // Fallback for users without loading screen
-                this.initializeGame();
-            }
+            // Initialize the game even if DB fails; show console message only
+            this.initializeGame();
         }
     }
 
     showNamePrompt() {
-        // Hide loading screen if visible
-        if (window.loadingScreen && window.loadingScreen.isVisible) {
-            window.loadingScreen.hide();
-        }
+        // Keep loading screen hidden by default; name prompt will show its own UI
         
         // Pause physics
         this.physics.pause();

@@ -40,6 +40,7 @@ class LoadingScreen {
     show() {
         this.isVisible = true;
         this.overlay.style.display = 'flex';
+        this.overlay.style.opacity = '1';
     }
 
     hide() {
@@ -62,6 +63,8 @@ class LoadingScreen {
     }
 
     showError(errorMessage) {
+        // Make sure overlay is visible when showing an error
+        if (!this.isVisible) this.show();
         const statusElement = document.getElementById('loading-status');
         const progressContainer = document.querySelector('.loading-progress');
         
